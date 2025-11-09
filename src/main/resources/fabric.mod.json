@@ -1,0 +1,35 @@
+{
+   "schemaVersion": 1,
+   "id": "affixes",
+   "version": "${version}",
+   "name": "Affixes",
+   "description": "",
+   "authors": [],
+   "contact": {},
+   "license": "MIT",
+   "icon": "assets/affixes/icon.png",
+   "environment": "*",
+   "entrypoints": {
+      "fabric-datagen": [
+         "com.gilithrimm.affixes.client.AffixesDataGenerator"
+      ],
+      "client": [
+         "com.gilithrimm.affixes.client.AffixesClient"
+      ],
+      "main": [
+         "com.gilithrimm.affixes.AffixesMod"
+      ]
+   },
+   "mixins": [
+      "affixes.mixins.json",
+      {
+         "config": "affixes.client.mixins.json",
+         "environment": "client"
+      }
+   ],
+   "depends": {
+      "fabricloader": ">=${loader_version}",
+      "fabric": "*",
+      "minecraft": "${minecraft_version}"
+   }
+}
