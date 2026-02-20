@@ -7,9 +7,12 @@
    "authors": [],
    "contact": {},
    "license": "MIT",
-   "icon": "assets/affixes/icon.png",
+   "icon": "assets/affixes/affixes-icon.png",
    "environment": "*",
    "entrypoints": {
+      "modmenu": [
+         "com.gilithrimm.affixes.client.ModMenuInit"
+      ],
       "fabric-datagen": [
          "com.gilithrimm.affixes.client.AffixesDataGenerator"
       ],

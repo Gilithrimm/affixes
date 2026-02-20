@@ -1,0 +1,26 @@
+{
+   "type": "minecraft:crafting_shaped",
+   "pattern": [
+      "ADA",
+      "pBp",
+      "ADA"
+   ],
+   "key": {
+      "A": {
+         "item": "minecraft:amethyst_shard"
+      },
+      "D": {
+         "item": "minecraft:diamond"
+      },
+      "p": {
+         "item": "minecraft:paper"
+      },
+      "B": {
+         "item": "minecraft:enchanted_book"
+      }
+   },
+   "result": {
+      "item": "affixes:scribed_paper",
+      "count": 2
+   }
+}
