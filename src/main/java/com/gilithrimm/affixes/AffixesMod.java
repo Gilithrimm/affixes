@@ -68,8 +68,23 @@ public class AffixesMod implements ModInitializer {
     *
     * @return {@link #RANDOM Minecraft's random} mapped into {@link RandomGenerator Java's random}
     */
-   public static RandomGenerator javaRandom() {
-      return new RandomGenerator() {
+   public static java.util.Random javaRandom() {
+      return new java.util.Random() {
+         @Override
+         public int nextInt() {
+            return RANDOM.nextInt();
+         }
+
+         @Override
+         public int nextInt(int bound) {
+            return RANDOM.nextInt(bound);
+         }
+
+         @Override
+         public long nextLong() {
+            return RANDOM.nextLong();
+         }
+
          @Override
          public boolean nextBoolean() {
             return RANDOM.nextBoolean();
@@ -86,23 +101,8 @@ public class AffixesMod implements ModInitializer {
          }
 
          @Override
-         public int nextInt() {
-            return RANDOM.nextInt();
-         }
-
-         @Override
-         public int nextInt(int bound) {
-            return RANDOM.nextInt(bound);
-         }
-
-         @Override
          public int nextInt(int origin, int bound) {
             return RANDOM.nextBetweenExclusive(origin, bound);
-         }
-
-         @Override
-         public long nextLong() {
-            return RANDOM.nextLong();
          }
       };
    }

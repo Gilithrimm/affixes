@@ -997,19 +997,17 @@ public class Affixes {
             }
          });
    /**
-    * <b>Charge Out:</b> gives 150 Charge to the target (200 if they have none)
-    * &amp; takes away 250 of attacker's Charge;
-    * multiplies damage dealt by {@code target's Charge/attacker's Charge}
+    * <b>Charge Out:</b> multiplies damage dealt by {@code target's Charge/attacker's Charge}, then
+    * gives 150 Charge to the target (200 if they have none) &amp; takes away 250 of attacker's Charge
     */
    public static final Affix CHARGE_OUT = register(id("charge_out"),
          new AttackHookAdapter() {
             @Override
             public float postAttackCooldown(float t,
                                             AttackHookContext context) {
-               final LivingEntity attacker = context.attacker();
                if (context.target() instanceof LivingEntity target) {
-                  float targetCharge = (getCharge(target)
-                                        + 1f);// to keep f(t)≥t
+                  final LivingEntity attacker = context.attacker();
+                  float targetCharge = (getCharge(target) + 1f);// to keep f(t)≥t
                   float attackerCharge = (getCharge(attacker) + 1f);// no a/0
                   return t * (targetCharge / attackerCharge);
                }
@@ -1041,7 +1039,7 @@ public class Affixes {
             @Override
             public void postHit(boolean isHit, float damage, AttackHookContext context) {
                if (isHit) {
-
+                  // take away target's charge & do sth w/ it???
                }
             }
          });

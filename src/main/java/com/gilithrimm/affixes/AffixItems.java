@@ -16,7 +16,6 @@ import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import static com.gilithrimm.affixes.AffixesMod.id;
@@ -68,8 +67,9 @@ public class AffixItems {
                                       .filter(a -> !a.hook().isCreativeOnly())
                                       .collect(Collectors.toCollection(
                                             ArrayList::new));
-         Collections.shuffle(affixList, Random.from(javaRandom()));
-         Affix random = affixList.getFirst();
+         // Collections.shuffle(affixList); // there's no way to convert between java Random and RandomGenerator :(
+         Collections.shuffle(affixList, javaRandom());// hacky as fuck but whatever
+         Affix random = affixList.get(0);
          ((IAffixContainer) (Object) affixPaper).affixes$storeAffix(random);
          user.giveItemStack(affixPaper);
          inHand.decrement(1);
