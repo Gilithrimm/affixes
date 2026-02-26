@@ -30,9 +30,9 @@ import static com.gilithrimm.affixes.hooks.AttackHook.AttackHookContext;
 @Mixin(MobEntity.class)
 public abstract class MobEntityMixin extends LivingEntity {
    @Unique
-   private final List<AttackHook> attackHooks = new ArrayList<>();
+   private final List<AttackHook> affixes$attackHooks = new ArrayList<>();
    @Unique
-   private AttackHookContext context;
+   private AttackHookContext affixes$context;
 
    private MobEntityMixin(EntityType<? extends LivingEntity> entityType,
                           World world) {
@@ -41,16 +41,16 @@ public abstract class MobEntityMixin extends LivingEntity {
 
    @Inject(method = "tryAttack", at = @At("HEAD"))
    private void setup(Entity target, CallbackInfoReturnable<Boolean> cir) {
-      context = new AttackHookContext(this, target);
-      attackHooks.clear();
-      attackHooks.addAll(((IAffixable) (Object) getStackInHand(getActiveHand()))
+      affixes$context = new AttackHookContext(this, target);
+      affixes$attackHooks.clear();
+      affixes$attackHooks.addAll(((IAffixable) (Object) getStackInHand(getActiveHand()))
             .affixes$getAffixes()
             .stream()
             .map(Affix::hook)
             .filter(AttackHook.class::isInstance)
             .map(AttackHook.class::cast)
             .toList());
-      attackHooks.forEach(Hook::setup);
+      affixes$attackHooks.forEach(Hook::setup);
    }
 
    @Inject(method = "tryAttack", at = @At(value = "INVOKE",
@@ -58,11 +58,11 @@ public abstract class MobEntityMixin extends LivingEntity {
                                           ordinal = 1))
    private void attribute(Entity target, CallbackInfoReturnable<Boolean> cir,
                           @Local(ordinal = 0) LocalFloatRef damage) {
-      damage.set(attackHooks.stream()
-                            .map((Function<AttackHook, AttackHooks.PostAttribute>) attackHook -> attackHook::postAttribute)
-                            .reduce(AttackHooks.PostAttribute::andThen)
-                            .orElse(AttackHooks.PostAttribute.identity())
-                            .postAttribute(damage.get(), context));
+      damage.set(affixes$attackHooks.stream()
+                                    .map((Function<AttackHook, AttackHooks.PostAttribute>) attackHook -> attackHook::postAttribute)
+                                    .reduce(AttackHooks.PostAttribute::andThen)
+                                    .orElse(AttackHooks.PostAttribute.identity())
+                                    .postAttribute(damage.get(), affixes$context));
    }
 
    @Inject(method = "tryAttack", at = @At(value = "INVOKE",
@@ -70,11 +70,11 @@ public abstract class MobEntityMixin extends LivingEntity {
                                           shift = At.Shift.AFTER))
    private void enchantments(Entity target, CallbackInfoReturnable<Boolean> cir,
                              @Local(ordinal = 0) LocalFloatRef damage) {
-      damage.set(attackHooks.stream()
-                            .map((Function<AttackHook, AttackHooks.PostEnchantments>) attackHook -> attackHook::postEnchantments)
-                            .reduce(AttackHooks.PostEnchantments::andThen)
-                            .orElse(AttackHooks.PostEnchantments.identity())
-                            .postEnchantments(damage.get(), context));
+      damage.set(affixes$attackHooks.stream()
+                                    .map((Function<AttackHook, AttackHooks.PostEnchantments>) attackHook -> attackHook::postEnchantments)
+                                    .reduce(AttackHooks.PostEnchantments::andThen)
+                                    .orElse(AttackHooks.PostEnchantments.identity())
+                                    .postEnchantments(damage.get(), affixes$context));
    }
 
    @Inject(method = "tryAttack",
@@ -83,22 +83,22 @@ public abstract class MobEntityMixin extends LivingEntity {
                     ordinal = 0))
    private void fireAspect(Entity target, CallbackInfoReturnable<Boolean> cir,
                            @Local(ordinal = 0) LocalFloatRef damage) {
-      damage.set(attackHooks.stream()
-                            .map((Function<AttackHook, AttackHooks.PostFireAspect>) attackHook -> attackHook::postFireAspect)
-                            .reduce(AttackHooks.PostFireAspect::andThen)
-                            .orElse(AttackHooks.PostFireAspect.identity())
-                            .postFireAspect(damage.get(), context));
+      damage.set(affixes$attackHooks.stream()
+                                    .map((Function<AttackHook, AttackHooks.PostFireAspect>) attackHook -> attackHook::postFireAspect)
+                                    .reduce(AttackHooks.PostFireAspect::andThen)
+                                    .orElse(AttackHooks.PostFireAspect.identity())
+                                    .postFireAspect(damage.get(), affixes$context));
    }
 
    @Inject(method = "tryAttack", at = @At(value = "RETURN"))
    private void hit(Entity target, CallbackInfoReturnable<Boolean> cir,
                     @Local(ordinal = 0) float damage,
                     @Local boolean isHit) {
-      attackHooks.stream()
-                 .map(h -> (AttackHooks.PostHit) h::postHit)
-                 .reduce(AttackHooks.PostHit::andThen)
-                 .orElse(AttackHooks.PostHit.identity())
-                 .postHit(isHit, damage, context);
+      affixes$attackHooks.stream()
+                         .map(h -> (AttackHooks.PostHit) h::postHit)
+                         .reduce(AttackHooks.PostHit::andThen)
+                         .orElse(AttackHooks.PostHit.identity())
+                         .postHit(isHit, damage, affixes$context);
    }
 
    @Inject(method = "tryAttack", at = @At(value = "INVOKE",
@@ -106,10 +106,10 @@ public abstract class MobEntityMixin extends LivingEntity {
    private void knockback(Entity target, CallbackInfoReturnable<Boolean> cir,
                           @Local(ordinal = 0) float damage,
                           @Local(ordinal = 1) float knockback) {
-      attackHooks.stream()
-                 .map(AttackHooks.PostKnockback.class::cast)
-                 .reduce(AttackHooks.PostKnockback::andThen)
-                 .orElse(AttackHooks.PostKnockback.identity())
-                 .postKnockback(damage, knockback, context);
+      affixes$attackHooks.stream()
+                         .map(AttackHooks.PostKnockback.class::cast)
+                         .reduce(AttackHooks.PostKnockback::andThen)
+                         .orElse(AttackHooks.PostKnockback.identity())
+                         .postKnockback(damage, knockback, affixes$context);
    }
 }

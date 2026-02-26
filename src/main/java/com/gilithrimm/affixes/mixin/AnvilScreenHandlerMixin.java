@@ -102,12 +102,12 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
       }
       // reroll
       if (slot1.isOf(AffixItems.AFFIX_REROLL)) {
-         reroll(slot0, copied);
+         affixes$reroll(slot0, copied);// todo does not work
       }
    }
 
    @Unique
-   private static void reroll(ItemStack s0, ItemStack cp) {
+   private static void affixes$reroll(ItemStack s0, ItemStack cp) {
       // if (s0.hasNbt() && s0.getNbt().contains("affixes")) {
       //    var current = s0.getNbt().getList("affixes", NbtElement.STRING_TYPE);
       //

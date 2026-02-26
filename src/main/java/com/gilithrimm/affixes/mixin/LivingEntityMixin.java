@@ -64,20 +64,20 @@ public abstract class LivingEntityMixin extends EntityMixin
    @Final
    private static Logger LOGGER;
    @Unique
-   private final List<DamageHook> damageHooks = new ArrayList<>();
+   private final List<DamageHook> affixes$damageHooks = new ArrayList<>();
    @Unique
-   private final Map<String, NbtElement> affixData = new HashMap<>();
+   private final Map<String, NbtElement> affixes$affixData = new HashMap<>();
    @Unique
-   private DamageHook.DamageHookContext context;
+   private DamageHook.DamageHookContext affixes$context;
 
    private LivingEntityMixin() {}
-//hooks
+// hooks
 
    @Inject(method = "damage", at = @At("HEAD"))
    private void setup(DamageSource source, float amount,
                       CallbackInfoReturnable<Boolean> cir) {
-      damageHooks.clear();
-      context = new DamageHook.DamageHookContext(source,
+      affixes$damageHooks.clear();
+      affixes$context = new DamageHook.DamageHookContext(source,
             (LivingEntity) (Object) this);
       List<ItemStack> affixedItems = new ArrayList<>();
 
@@ -91,7 +91,7 @@ public abstract class LivingEntityMixin extends EntityMixin
          affixedItems.add(getOffHandStack());
       }
 
-      damageHooks.addAll(affixedItems
+      affixes$damageHooks.addAll(affixedItems
             .stream()
             .map(IAffixable.class::cast)
             .map(IAffixable::affixes$getAffixes)
@@ -100,7 +100,7 @@ public abstract class LivingEntityMixin extends EntityMixin
             .filter(DamageHook.class::isInstance)
             .map(DamageHook.class::cast)
             .toList());
-      damageHooks.forEach(Hook::setup);
+      affixes$damageHooks.forEach(Hook::setup);
    }
 
    /**
@@ -133,11 +133,11 @@ public abstract class LivingEntityMixin extends EntityMixin
                     shift = At.Shift.AFTER))
    private void shieldBlock(DamageSource source, float amount,
                             CallbackInfoReturnable<Boolean> cir) {
-      damageHooks.stream()
-                 .map((Function<? super DamageHook, PostShieldBlock>) dh -> dh::postShieldBlock)
-                 .reduce(PostShieldBlock::andThen)
-                 .orElse(PostShieldBlock.identity())
-                 .postShieldBlock(context, amount);
+      affixes$damageHooks.stream()
+                         .map((Function<? super DamageHook, PostShieldBlock>) dh -> dh::postShieldBlock)
+                         .reduce(PostShieldBlock::andThen)
+                         .orElse(PostShieldBlock.identity())
+                         .postShieldBlock(affixes$context, amount);
       LOGGER.debug("shield:{}", amount);
    }
 
@@ -145,12 +145,12 @@ public abstract class LivingEntityMixin extends EntityMixin
                                                    target = "Lnet/minecraft/entity/LivingEntity;applyArmorToDamage(Lnet/minecraft/entity/damage/DamageSource;F)F"))
    private float armor(LivingEntity instance, DamageSource source, float amount,
                        Operation<Float> original) {
-      amount = damageHooks.stream()
-                          .map((Function<DamageHook, PostArmor>) dh -> dh::postArmor)
-                          .reduce(PostArmor::andThen)
-                          .orElse(PostArmor.identity())
-                          .postArmor(context,
-                                original.call(instance, source, amount));
+      amount = affixes$damageHooks.stream()
+                                  .map((Function<DamageHook, PostArmor>) dh -> dh::postArmor)
+                                  .reduce(PostArmor::andThen)
+                                  .orElse(PostArmor.identity())
+                                  .postArmor(affixes$context,
+                                        original.call(instance, source, amount));
       LOGGER.debug("armor:{}", amount);
       return amount;
    }
@@ -159,13 +159,13 @@ public abstract class LivingEntityMixin extends EntityMixin
                                                            target = "Lnet/minecraft/entity/DamageUtil;getInflictedDamage(FF)F"))
    private float protection(float damageDealt, float protection,
                             Operation<Float> original) {
-      damageDealt = damageHooks.stream()
-                               .map((Function<DamageHook, PostProtection>) dh -> dh::postProtection)
-                               .reduce(PostProtection::andThen)
-                               .orElse(PostProtection.identity())
-                               .postProtection(context,
-                                     original.call(damageDealt, protection),
-                                     protection);
+      damageDealt = affixes$damageHooks.stream()
+                                       .map((Function<DamageHook, PostProtection>) dh -> dh::postProtection)
+                                       .reduce(PostProtection::andThen)
+                                       .orElse(PostProtection.identity())
+                                       .postProtection(affixes$context,
+                                             original.call(damageDealt, protection),
+                                             protection);
       LOGGER.debug("prot:{} dmg:{}", protection, damageDealt);
       return damageDealt;
    }
@@ -174,33 +174,33 @@ public abstract class LivingEntityMixin extends EntityMixin
            at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F"))
    private void resistance(DamageSource source, float amount,
                            CallbackInfoReturnable<Float> cir) {
-      amount = damageHooks.stream()
-                          .map((Function<DamageHook, PostResistance>) dh -> dh::postResistance)
-                          .reduce(PostResistance::andThen)
-                          .orElse(PostResistance.identity())
-                          .postResistance(context, amount);
+      amount = affixes$damageHooks.stream()
+                                  .map((Function<DamageHook, PostResistance>) dh -> dh::postResistance)
+                                  .reduce(PostResistance::andThen)
+                                  .orElse(PostResistance.identity())
+                                  .postResistance(affixes$context, amount);
       LOGGER.debug("res:{}", amount);
    }
 
    @Inject(method = "applyDamage",
            at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F"))
    private void absorption(DamageSource source, float amount, CallbackInfo ci) {
-      amount = damageHooks.stream()
-                          .map((Function<DamageHook, PostAbsorption>) dh -> dh::postAbsorption)
-                          .reduce(PostAbsorption::andThen)
-                          .orElse(PostAbsorption.identity())
-                          .postAbsorption(context, amount);
+      amount = affixes$damageHooks.stream()
+                                  .map((Function<DamageHook, PostAbsorption>) dh -> dh::postAbsorption)
+                                  .reduce(PostAbsorption::andThen)
+                                  .orElse(PostAbsorption.identity())
+                                  .postAbsorption(affixes$context, amount);
       LOGGER.debug("absorb:{}", amount);
    }
 
    @Inject(method = "applyDamage", at = @At(value = "INVOKE",
                                             target = "Lnet/minecraft/entity/LivingEntity;setHealth(F)V"))
    private void damage(DamageSource source, float amount, CallbackInfo ci) {
-      damageHooks.stream()
-                 .map((Function<DamageHook, PostDamage>) dh -> dh::postDamage)
-                 .reduce(PostDamage::andThen)
-                 .orElse(PostDamage.identity())
-                 .postDamage(context, amount);
+      affixes$damageHooks.stream()
+                         .map((Function<DamageHook, PostDamage>) dh -> dh::postDamage)
+                         .reduce(PostDamage::andThen)
+                         .orElse(PostDamage.identity())
+                         .postDamage(affixes$context, amount);
       LOGGER.debug("dmg:{}", amount);
    }
 
@@ -208,11 +208,11 @@ public abstract class LivingEntityMixin extends EntityMixin
                                        target = "Lnet/minecraft/entity/LivingEntity;takeKnockback(DDD)V"))
    private void knockback(DamageSource source, float amount,
                           CallbackInfoReturnable<Boolean> cir) {
-      damageHooks.stream()
-                 .map((Function<DamageHook, PostKnockback>) dh -> dh::postKnockback)
-                 .reduce(PostKnockback::andThen)
-                 .orElse(PostKnockback.identity())
-                 .postKnockback(context, amount);
+      affixes$damageHooks.stream()
+                         .map((Function<DamageHook, PostKnockback>) dh -> dh::postKnockback)
+                         .reduce(PostKnockback::andThen)
+                         .orElse(PostKnockback.identity())
+                         .postKnockback(affixes$context, amount);
       LOGGER.debug("kb:{}", amount);
    }
 
@@ -220,48 +220,48 @@ public abstract class LivingEntityMixin extends EntityMixin
                                        target = "Lnet/minecraft/entity/LivingEntity;onDeath(Lnet/minecraft/entity/damage/DamageSource;)V"))
    private void death(DamageSource source, float amount,
                       CallbackInfoReturnable<Boolean> cir) {
-      damageHooks.stream()
-                 .map((Function<DamageHook, PostDeath>) dh -> dh::postDeath)
-                 .reduce(PostDeath::andThen)
-                 .orElse(PostDeath.identity())
-                 .postDeath(context, amount);
+      affixes$damageHooks.stream()
+                         .map((Function<DamageHook, PostDeath>) dh -> dh::postDeath)
+                         .reduce(PostDeath::andThen)
+                         .orElse(PostDeath.identity())
+                         .postDeath(affixes$context, amount);
       LOGGER.debug("ded:{}", amount);
    }
 
-   //affix data fuckery
+   // affix data fuckery
 
    @Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
    private void writeNbt(NbtCompound nbt, CallbackInfo ci) {
       if (!nbt.contains(NBT_PREFIX)) {
          nbt.put(NBT_PREFIX, new NbtCompound());
       }
-      affixData.forEach(nbt.getCompound(NBT_PREFIX)::put);
+      affixes$affixData.forEach(nbt.getCompound(NBT_PREFIX)::put);
    }
 
    @Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
    private void readNbt(NbtCompound nbt, CallbackInfo ci) {
       if (nbt.contains(NBT_PREFIX)) {
          final NbtCompound data = nbt.getCompound(NBT_PREFIX);
-         data.getKeys().forEach(key -> affixData.put(key, data.get(key)));
+         data.getKeys().forEach(key -> affixes$affixData.put(key, data.get(key)));
       }
    }
 
    @Override
    public NbtElement affixes$getData(String key) {
-      return affixData.get(key);
+      return affixes$affixData.get(key);
    }
 
    @Override
    public void affixes$putData(String key, NbtElement data) {
-      affixData.put(key, data);
+      affixes$affixData.put(key, data);
    }
 
    @Override
    public boolean affixes$containsData(String key) {
-      return affixData.containsKey(key);
+      return affixes$affixData.containsKey(key);
    }
 
-   //vulnerable status effect
+   // vulnerable status effect
 
    @Definition(id = "getAmplifier",
                method = "Lnet/minecraft/entity/effect/StatusEffectInstance;getAmplifier()I")
@@ -310,7 +310,7 @@ public abstract class LivingEntityMixin extends EntityMixin
       return original;
    }
 
-   //bleed
+   // bleed
 
    @ModifyReturnValue(method = "modifyAppliedDamage", at = @At("RETURN"))
    private float bleed(float damage, @Local(argsOnly = true) DamageSource src) {
@@ -322,7 +322,7 @@ public abstract class LivingEntityMixin extends EntityMixin
       return damage;
    }
 
-   //charge from lightning
+   // charge from lightning
 
    @Override
    protected void lightning(ServerWorld world, LightningEntity lightning,
@@ -330,9 +330,9 @@ public abstract class LivingEntityMixin extends EntityMixin
       super.lightning(world, lightning, ci);
       String key = "charge";
       int charge = 1000;
-      if (affixData.containsKey(key)) {
-         charge += ((NbtInt) affixData.get(key)).intValue();
+      if (affixes$affixData.containsKey(key)) {
+         charge += ((NbtInt) affixes$affixData.get(key)).intValue();
       }
-      affixData.put(key, NbtInt.of(charge));
+      affixes$affixData.put(key, NbtInt.of(charge));
    }
 }

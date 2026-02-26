@@ -44,15 +44,15 @@ import static com.gilithrimm.affixes.hooks.AttackHooks.*;
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin extends LivingEntity {
    @Unique
-   private final List<DamageHook> damageHooks = new ArrayList<>();
+   private final List<DamageHook> affixes$damageHooks = new ArrayList<>();
    @Unique
-   private final List<AttackHook> attackHooks = new ArrayList<>();
+   private final List<AttackHook> affixes$attackHooks = new ArrayList<>();
    @Unique
-   private AttackHookContext attackHookContext;
+   private AttackHookContext affixes$attackHookContext;
    @Unique
-   private DamageHook.DamageHookContext damageHookContext;
+   private DamageHook.DamageHookContext affixes$damageHookContext;
 
-   //attack
+   // attack
 
    private PlayerEntityMixin(EntityType<? extends LivingEntity> entityType,
                              World world) {
@@ -61,26 +61,27 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
    @Inject(method = "attack", at = @At("HEAD"))
    private void setup_attack(Entity target, CallbackInfo ci) {
-      attackHookContext = new AttackHookContext(this, target);
-      attackHooks.addAll(((IAffixable) (Object) getMainHandStack())
+      affixes$attackHookContext = new AttackHookContext(this, target);
+      affixes$attackHooks.addAll(((IAffixable) (Object) getMainHandStack())
             .affixes$getAffixes()
             .stream()
             .map(Affix::hook)
             .filter(AttackHook.class::isInstance)
             .map(AttackHook.class::cast)
             .toList());
-      attackHooks.forEach(Hook::setup);
+      affixes$attackHooks.forEach(Hook::setup);
    }
 
    @Inject(method = "attack", at = @At(value = "INVOKE",
                                        target = "Lnet/minecraft/entity/player/PlayerEntity;getAttackCooldownProgress(F)F"))
    private void attribute(Entity target, CallbackInfo ci,
                           @Local(ordinal = 0) LocalFloatRef damage) {
-      damage.set(attackHooks.stream()
-                            .map((Function<AttackHook, PostAttribute>) attackHook -> attackHook::postAttribute)
-                            .reduce(PostAttribute::andThen)
-                            .orElse(PostAttribute.identity())
-                            .postAttribute(damage.get(), attackHookContext));
+      damage.set(affixes$attackHooks.stream()
+                                    .map((Function<AttackHook, PostAttribute>) attackHook -> attackHook::postAttribute)
+                                    .reduce(PostAttribute::andThen)
+                                    .orElse(PostAttribute.identity())
+                                    .postAttribute(damage.get(),
+                                          affixes$attackHookContext));
       LOGGER.debug("postAttribute: {}", damage.get());
    }
 
@@ -88,12 +89,12 @@ public abstract class PlayerEntityMixin extends LivingEntity {
                                               target = "Lnet/minecraft/entity/player/PlayerEntity;resetLastAttackedTicks()V"))
    private void cooldown(PlayerEntity instance, Operation<Void> original,
                          @Local(ordinal = 0) LocalFloatRef damage) {
-      damage.set(attackHooks.stream()
-                            .map((Function<AttackHook, PostAttackCooldown>) attackHook -> attackHook::postAttackCooldown)
-                            .reduce(PostAttackCooldown::andThen)
-                            .orElse(PostAttackCooldown.identity())
-                            .postAttackCooldown(damage.get(),
-                                  attackHookContext));
+      damage.set(affixes$attackHooks.stream()
+                                    .map((Function<AttackHook, PostAttackCooldown>) attackHook -> attackHook::postAttackCooldown)
+                                    .reduce(PostAttackCooldown::andThen)
+                                    .orElse(PostAttackCooldown.identity())
+                                    .postAttackCooldown(damage.get(),
+                                          affixes$attackHookContext));
       LOGGER.debug("postAttackCooldown: {}", damage.get());
    }
 
@@ -101,11 +102,11 @@ public abstract class PlayerEntityMixin extends LivingEntity {
    @Expression("f * 1.5")
    @ModifyExpressionValue(method = "attack", at = @At("MIXINEXTRAS:EXPRESSION"))
    private float crit(float damage) {
-      float total = attackHooks.stream()
-                               .map((Function<AttackHook, PostCritical>) attackHook -> attackHook::postCritical)
-                               .reduce(PostCritical::andThen)
-                               .orElse(PostCritical.identity())
-                               .postCritical(damage, attackHookContext);
+      float total = affixes$attackHooks.stream()
+                                       .map((Function<AttackHook, PostCritical>) attackHook -> attackHook::postCritical)
+                                       .reduce(PostCritical::andThen)
+                                       .orElse(PostCritical.identity())
+                                       .postCritical(damage, affixes$attackHookContext);
       LOGGER.debug("postCritical: {}", total);
       return total;
    }
@@ -115,11 +116,12 @@ public abstract class PlayerEntityMixin extends LivingEntity {
    @Expression("f+g")
    @ModifyExpressionValue(method = "attack", at = @At("MIXINEXTRAS:EXPRESSION"))
    private float enchantments(float damage) {
-      float total = attackHooks.stream()
-                               .map((Function<AttackHook, PostEnchantments>) attackHook -> attackHook::postEnchantments)
-                               .reduce(PostEnchantments::andThen)
-                               .orElse(PostEnchantments.identity())
-                               .postEnchantments(damage, attackHookContext);
+      float total = affixes$attackHooks.stream()
+                                       .map((Function<AttackHook, PostEnchantments>) attackHook -> attackHook::postEnchantments)
+                                       .reduce(PostEnchantments::andThen)
+                                       .orElse(PostEnchantments.identity())
+                                       .postEnchantments(damage,
+                                             affixes$attackHookContext);
       LOGGER.debug("postEnchantments: {}", total);
       return total;
    }
@@ -130,11 +132,12 @@ public abstract class PlayerEntityMixin extends LivingEntity {
                     ordinal = 0))
    private void fireAspect(Entity target, CallbackInfo ci,
                            @Local(ordinal = 0) LocalFloatRef damage) {
-      damage.set(attackHooks.stream()
-                            .map((Function<AttackHook, PostFireAspect>) attackHook -> attackHook::postFireAspect)
-                            .reduce(PostFireAspect::andThen)
-                            .orElse(PostFireAspect.identity())
-                            .postFireAspect(damage.get(), attackHookContext));
+      damage.set(affixes$attackHooks.stream()
+                                    .map((Function<AttackHook, PostFireAspect>) attackHook -> attackHook::postFireAspect)
+                                    .reduce(PostFireAspect::andThen)
+                                    .orElse(PostFireAspect.identity())
+                                    .postFireAspect(damage.get(),
+                                          affixes$attackHookContext));
       LOGGER.debug("postFireAspect: {}", damage.get());
    }
 
@@ -145,11 +148,11 @@ public abstract class PlayerEntityMixin extends LivingEntity {
    @ModifyExpressionValue(method = "attack",
                           at = @At(value = "MIXINEXTRAS:EXPRESSION"))
    private boolean hit(boolean isHit, @Local(ordinal = 0) float dmg) {
-      attackHooks.stream()
-                 .map((Function<AttackHook, PostHit>) ah -> ah::postHit)
-                 .reduce(PostHit::andThen)
-                 .orElse(PostHit.identity())
-                 .postHit(isHit, dmg, attackHookContext);
+      affixes$attackHooks.stream()
+                         .map((Function<AttackHook, PostHit>) ah -> ah::postHit)
+                         .reduce(PostHit::andThen)
+                         .orElse(PostHit.identity())
+                         .postHit(isHit, dmg, affixes$attackHookContext);
       LOGGER.debug("postHit: {}, damage: {}", isHit, dmg);
       return isHit;
    }
@@ -160,11 +163,12 @@ public abstract class PlayerEntityMixin extends LivingEntity {
    private void knockback(Entity target, CallbackInfo ci,
                           @Local(ordinal = 0) float damage,
                           @Local(ordinal = 0) int knockback) {
-      attackHooks.stream()
-                 .map((Function<AttackHook, PostKnockback>) attackHook -> attackHook::postKnockback)
-                 .reduce(PostKnockback::andThen)
-                 .orElse(PostKnockback.identity())
-                 .postKnockback(damage, knockback * .5f, attackHookContext);
+      affixes$attackHooks.stream()
+                         .map((Function<AttackHook, PostKnockback>) attackHook -> attackHook::postKnockback)
+                         .reduce(PostKnockback::andThen)
+                         .orElse(PostKnockback.identity())
+                         .postKnockback(damage, knockback * .5f,
+                               affixes$attackHookContext);
       LOGGER.debug("postKnockback: dmg:{}, kb:{}", damage, knockback);
    }
 
@@ -175,12 +179,12 @@ public abstract class PlayerEntityMixin extends LivingEntity {
    private void sweeping(Entity target, CallbackInfo ci,
                          @Local(ordinal = 0) LivingEntity entity,
                          @Local(ordinal = 4) LocalFloatRef sweep) {
-      sweep.set(attackHooks.stream()
-                           .map((Function<AttackHook, PostSweeping>) attackHook -> attackHook::postSweeping)
-                           .reduce(PostSweeping::andThen)
-                           .orElse(PostSweeping.identity())
-                           .postSweeping(sweep.get(), entity,
-                                 attackHookContext));
+      sweep.set(affixes$attackHooks.stream()
+                                   .map((Function<AttackHook, PostSweeping>) attackHook -> attackHook::postSweeping)
+                                   .reduce(PostSweeping::andThen)
+                                   .orElse(PostSweeping.identity())
+                                   .postSweeping(sweep.get(), entity,
+                                         affixes$attackHookContext));
       LOGGER.debug("postSweeping: {} dmg for entity {}", sweep.get(), entity);
    }
 
@@ -191,10 +195,10 @@ public abstract class PlayerEntityMixin extends LivingEntity {
    private void sweeping_toggle(Entity target, CallbackInfo ci,
                                 @Local(ordinal = 0) LivingEntity entity,
                                 @Local(ordinal = 4) LocalFloatRef sweep) {
-      var hook = attackHooks.stream()
-                            .filter(AttackHook::shouldTriggerWhenSweeping)
-                            .reduce(AttackHookAdapter::reduce)
-                            .orElse(new AttackHookAdapter());
+      var hook = affixes$attackHooks.stream()
+                                    .filter(AttackHook::shouldTriggerWhenSweeping)
+                                    .reduce(AttackHookAdapter::reduce)
+                                    .orElse(new AttackHookAdapter());
       var sweepContext = new AttackHookContext(this, entity);
       sweep.set(hook.postAttribute(sweep.get(), sweepContext));
       sweep.set(hook.postAttackCooldown(sweep.get(), sweepContext));
@@ -212,10 +216,10 @@ public abstract class PlayerEntityMixin extends LivingEntity {
    private boolean sweep_toggle_hit(boolean original,
                                     @Local(ordinal = 0) LivingEntity entity,
                                     @Local(ordinal = 4) float sweep) {
-      var hook = attackHooks.stream()
-                            .filter(AttackHook::shouldTriggerWhenSweeping)
-                            .reduce(AttackHookAdapter::reduce)
-                            .orElse(new AttackHookAdapter());
+      var hook = affixes$attackHooks.stream()
+                                    .filter(AttackHook::shouldTriggerWhenSweeping)
+                                    .reduce(AttackHookAdapter::reduce)
+                                    .orElse(new AttackHookAdapter());
       var sweepContext = new AttackHookContext(this, entity);
       hook.postHit(original, sweep, sweepContext);
       hook.postKnockback(sweep, .4f, sweepContext);
@@ -224,15 +228,15 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
    @Inject(method = "attack", at = @At("TAIL"))
    private void teardown_attack(Entity target, CallbackInfo ci) {
-      attackHooks.clear();
+      affixes$attackHooks.clear();
    }
 
-   //damage
+   // damage
 
    @Inject(method = "damage", at = @At("HEAD"))
    private void setup_damage(DamageSource source, float amount,
                              CallbackInfoReturnable<Boolean> cir) {
-      damageHookContext = new DamageHook.DamageHookContext(source, this);
+      affixes$damageHookContext = new DamageHook.DamageHookContext(source, this);
 //      getArmorItems()
 //            .iterator()
 //            .forEachRemaining(itemStack -> damageHooks.addAll(
@@ -243,7 +247,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 //                        .filter(DamageHook.class::isInstance)
 //                        .map(DamageHook.class::cast)
 //                        .toList()));
-      damageHooks.clear();
+      affixes$damageHooks.clear();
       List<ItemStack> affixedItems = new ArrayList<>();
 
       getArmorItems().forEach(affixedItems::add);
@@ -252,7 +256,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
          affixedItems.add(getStackInHand(getActiveHand()));
       }
 
-      damageHooks.addAll(affixedItems
+      affixes$damageHooks.addAll(affixedItems
             .stream()
             .map(IAffixable.class::cast)
             .map(IAffixable::affixes$getAffixes)
@@ -261,19 +265,19 @@ public abstract class PlayerEntityMixin extends LivingEntity {
             .filter(DamageHook.class::isInstance)
             .map(DamageHook.class::cast)
             .toList());
-      damageHooks.forEach(Hook::setup);
+      affixes$damageHooks.forEach(Hook::setup);
    }
 
    @WrapOperation(method = "applyDamage", at = @At(value = "INVOKE",
                                                    target = "Lnet/minecraft/entity/player/PlayerEntity;applyArmorToDamage(Lnet/minecraft/entity/damage/DamageSource;F)F"))
    private float armor(PlayerEntity instance, DamageSource source, float amount,
                        Operation<Float> original) {
-      amount = damageHooks.stream()
-                          .map((Function<DamageHook, DamageHooks.PostArmor>) dh -> dh::postArmor)
-                          .reduce(DamageHooks.PostArmor::andThen)
-                          .orElse(DamageHooks.PostArmor.identity())
-                          .postArmor(damageHookContext,
-                                original.call(instance, source, amount));
+      amount = affixes$damageHooks.stream()
+                                  .map((Function<DamageHook, DamageHooks.PostArmor>) dh -> dh::postArmor)
+                                  .reduce(DamageHooks.PostArmor::andThen)
+                                  .orElse(DamageHooks.PostArmor.identity())
+                                  .postArmor(affixes$damageHookContext,
+                                        original.call(instance, source, amount));
       LOGGER.debug("armor:{}", amount);
       return amount;
    }
@@ -281,11 +285,11 @@ public abstract class PlayerEntityMixin extends LivingEntity {
    @Inject(method = "applyDamage",
            at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F"))
    private void absorption(DamageSource source, float amount, CallbackInfo ci) {
-      amount = damageHooks.stream()
-                          .map((Function<DamageHook, DamageHooks.PostAbsorption>) dh -> dh::postAbsorption)
-                          .reduce(DamageHooks.PostAbsorption::andThen)
-                          .orElse(DamageHooks.PostAbsorption.identity())
-                          .postAbsorption(damageHookContext, amount);
+      amount = affixes$damageHooks.stream()
+                                  .map((Function<DamageHook, DamageHooks.PostAbsorption>) dh -> dh::postAbsorption)
+                                  .reduce(DamageHooks.PostAbsorption::andThen)
+                                  .orElse(DamageHooks.PostAbsorption.identity())
+                                  .postAbsorption(affixes$damageHookContext, amount);
       LOGGER.debug("absorb:{}", amount);
    }
 
@@ -293,11 +297,11 @@ public abstract class PlayerEntityMixin extends LivingEntity {
                                             target = "Lnet/minecraft/entity/player/PlayerEntity;setHealth(F)V",
                                             shift = At.Shift.AFTER))
    private void damage(DamageSource source, float amount, CallbackInfo ci) {
-      damageHooks.stream()
-                 .map((Function<DamageHook, DamageHooks.PostDamage>) dh -> dh::postDamage)
-                 .reduce(DamageHooks.PostDamage::andThen)
-                 .orElse(DamageHooks.PostDamage.identity())
-                 .postDamage(damageHookContext, amount);
+      affixes$damageHooks.stream()
+                         .map((Function<DamageHook, DamageHooks.PostDamage>) dh -> dh::postDamage)
+                         .reduce(DamageHooks.PostDamage::andThen)
+                         .orElse(DamageHooks.PostDamage.identity())
+                         .postDamage(affixes$damageHookContext, amount);
       LOGGER.debug("dmg:{}", amount);
    }
 
