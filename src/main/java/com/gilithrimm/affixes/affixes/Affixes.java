@@ -56,15 +56,12 @@ Affixes ideas:
  * - Deal with Devil - Roulette: every 6th projectile hit deals 66% more damage, every 36th projectile hit deals 666% damage on 66% chance;
  *      all other projectiles deal 6.6% damage
  * - Marksman: increase dmg dealt by 1/5 of distance between you and the target
- * - Defensive Stance
  * - Charge
- * - a way for Affixes to hold >=1 Hooks of different types (i.e. Attack Hook + Damage Hook)
  *   - adding hooks to entities at runtime
  *   - hooks that execute only n times
  *   - separate data per affix instance
- * - Deal with Devil - 7th Shot
- * - Deal with Devil - Immortality
- * -
+ * - Deal with Devil - 7th Shot: increase damage
+ * - Deal with Devil - To The Moon:
  * -
  */
 public class Affixes {
@@ -200,23 +197,22 @@ public class Affixes {
    public static final Affix WEATHERED_POISON = register(id("weathered_poison"),
          (PostHit) (isHit, damage, context) -> {
             if (isHit) {
-               final int result = RANDOM.nextBetween(1, 1000);
                int poisonOdds = 300;
-               int duration = 12;
-               if (result <= wpSelfPoisonChance ||
-                   debugMode) {
-                  context.attacker()
-                         .addStatusEffect(
-                               new StatusEffectInstance(POISON,
-                                     duration * 20),
-                               context.attacker());
-               }
-               if ((result <= poisonOdds || debugMode) &&
-                   context.target() instanceof LivingEntity entity) {
-                  entity.addStatusEffect(
-                        new StatusEffectInstance(POISON,
-                              duration * 20),
-                        context.attacker());
+               int seconds = 12;
+               onChance(1000)
+                     .debug()
+                     .lucky(() -> statusEffect(POISON)
+                           .duration(seconds * 20)
+                           .apply(context.attacker(), context.attacker()))
+                     .apply(wpSelfPoisonChance);
+
+               if (context.target() instanceof LivingEntity entity) {
+                  onChance(1000)
+                        .debug()
+                        .lucky(() -> statusEffect(POISON)
+                              .duration(seconds * 20)
+                              .apply(entity, context.attacker()))
+                        .apply(poisonOdds);
                }
             }
          });
@@ -259,7 +255,8 @@ public class Affixes {
             int randomEvent;
             StatusEffect[] statusEffects;
             int allEvents;
-            /**'tis here to prevent doubles*/
+            //'tis here to prevent doubles
+            // actually this might be volatile in a multiplayer scenario
             boolean didExecute = false;
 
             @Override
@@ -270,8 +267,8 @@ public class Affixes {
                         .stream()
                         .map(Map.Entry::getValue)
                         .toArray(StatusEffect[]::new);
-                  allEvents = statusEffects.length *
-                              2;// doubled for attacker & target separately
+                  allEvents = statusEffects.length
+                              * 2; // since both attacker and target can get effect
                   allEvents += registrySize();
                   allEvents += singleEvents;
                   randomEvent = RANDOM.nextInt(allEvents);
@@ -286,22 +283,22 @@ public class Affixes {
                   int duration = 25;
 
                   if (randomEvent < statusEffects.length + singleEvents) {
-                     context.attacker()
-                            .addStatusEffect(
-                                  new StatusEffectInstance(
-                                        statusEffects[randomEvent],
-                                        20 * duration, 2));
+                     statusEffect(statusEffects[randomEvent])
+                           .duration(20 * duration)
+                           .amplifier(2)
+                           .apply(context.attacker());
                   } else if (randomEvent - statusEffects.length <
                              statusEffects.length + singleEvents) {
-                     ((LivingEntity) (context.target())).addStatusEffect(
-                           new StatusEffectInstance(
-                                 statusEffects[randomEvent
-                                               - statusEffects.length],
-                                 20 * duration, 2));
+                     statusEffect(statusEffects[randomEvent - statusEffects.length])
+                           .duration(20 * duration)
+                           .amplifier(2)
+                           .apply((LivingEntity) context.target());
                   } else if (affixPosInList < registrySize() + singleEvents) {
                      final Affix affix = AffixRegistry.get(affixPosInList);
                      final IAffixable mainHandStack = ((IAffixable) (Object) context.affixedTool());
                      // this can trigger <=> (attacker's a living && attacker's main hand stack exists && attacker's main hand stack has >0 affixes bcuz THIS IS AN AFFIX)
+                     // therefore the warning below is absolute bullshit
+                     //(unless you delete the item mid affix exec but I don't think that's possible)
                      mainHandStack.affixes$getAffixes()
                                   .stream()
                                   .filter(aff -> !aff.equals(id("devil_die")))
@@ -450,22 +447,23 @@ public class Affixes {
          id("striking_the_weaknesses"),
          (PostHit) (isHit, damage, context) -> {
             if (isHit && context.target() instanceof LivingEntity entity) {
-               final int result = RANDOM.nextBetween(1, 20);
                if (entity.hasStatusEffect(BLEED)) {
                   int odds = 7;
-                  if (result <= odds || debugMode) {
-                     // amplifier := intended lvl - 1
-                     entity.addStatusEffect(
-                           new StatusEffectInstance(VULNERABILITY, 20 * 45, 1),
-                           context.attacker());
-                  }
+                  onChance(20)
+                        .debug()
+                        .lucky(() -> statusEffect(VULNERABILITY)
+                              .duration(20 * 45)
+                              .amplifier(1)// amplifier := intended lvl - 1
+                              .apply(entity, context.attacker()))
+                        .apply(odds);
                } else {
                   int odds = 4;
-                  if (result <= odds || debugMode) {
-                     entity.addStatusEffect(
-                           new StatusEffectInstance(VULNERABILITY, 20 * 30),
-                           context.attacker());
-                  }
+                  onChance(20)
+                        .debug()
+                        .lucky(() -> statusEffect(VULNERABILITY)
+                              .duration(20 * 30)
+                              .apply(entity, context.attacker()))
+                        .apply(odds);
                }
             }
          });
@@ -480,48 +478,50 @@ public class Affixes {
          id("puncturing_wounds"),// hehe 3556 dmg per hit
          (PostHit) (isHit, damage, c) -> {
             if (isHit && c.target() instanceof LivingEntity entity) {
-               final int result = RANDOM.nextBetween(1, 20);
                if (entity.hasStatusEffect(VULNERABILITY)) {
                   if (entity.hasStatusEffect(BLEED)) {
                      int odds = 4;
-                     if (result <= odds || debugMode) {
-                        StatusEffectInstance statusEffect = entity.getStatusEffect(
-                              BLEED);
-                        final int duration = statusEffect.mapDuration(
-                              d -> d - d / 10);
-                        final int amp = statusEffect.getAmplifier() + 1;
-                        entity.addStatusEffect(
-                              new StatusEffectInstance(BLEED, duration, amp),
-                              c.attacker());
-                     }
+                     onChance(20)
+                           .debug()
+                           .lucky(() -> {
+                              StatusEffectInstance effect = entity.getStatusEffect(BLEED);
+                              statusEffect(BLEED)
+                                    .duration(effect.mapDuration(d -> d * 9 / 10))
+                                    .amplifier(effect.getAmplifier() + 1)
+                                    .apply(entity, c.attacker());
+                           })
+                           .apply(odds);
                   } else {
                      int odds = 8;
-                     if (result <= odds || debugMode) {
-                        entity.addStatusEffect(
-                              new StatusEffectInstance(BLEED, 20 * 60, 1),
-                              c.attacker());
-                     }
+                     onChance(20)
+                           .debug()
+                           .lucky(() -> statusEffect(BLEED)
+                                 .duration(20 * 60)
+                                 .amplifier(1)
+                                 .apply(entity, c.attacker()))
+                           .apply(odds);
                   }
                } else {
                   if (entity.hasStatusEffect(BLEED)) {
                      int odds = 3;
-                     if (result <= odds || debugMode) {
-                        StatusEffectInstance statusEffect = entity.getStatusEffect(
-                              BLEED);
-                        final int duration = statusEffect.mapDuration(
-                              d -> d - d / 5);
-                        final int amp = statusEffect.getAmplifier() + 1;
-                        entity.addStatusEffect(
-                              new StatusEffectInstance(BLEED, duration, amp),
-                              c.attacker());
-                     }
+                     onChance(20)
+                           .debug()
+                           .lucky(() -> {
+                              StatusEffectInstance effect = entity.getStatusEffect(BLEED);
+                              statusEffect(BLEED)
+                                    .duration(effect.mapDuration(d -> d * 4 / 5))
+                                    .amplifier(effect.getAmplifier() + 1)
+                                    .apply(entity, c.attacker());
+                           })
+                           .apply(odds);
                   } else {
                      int odds = 6;
-                     if (result <= odds || debugMode) {
-                        entity.addStatusEffect(
-                              new StatusEffectInstance(BLEED, 20 * 45),
-                              c.attacker());
-                     }
+                     onChance(20)
+                           .debug()
+                           .lucky(() -> statusEffect(BLEED)
+                                 .duration(20 * 45)
+                                 .apply(entity, c.attacker()))
+                           .apply(odds);
                   }
                }
             }
@@ -640,7 +640,7 @@ public class Affixes {
          (PostArmor) (context, amount) -> {
             float damage = amount;
             for (int i = 0; i <= (int) amount / 2; i++) {
-               if (RANDOM.nextBetween(1, 4) == 4 || debugMode) {
+               if (RANDOM.nextBetween(1, 4) == 1 || debugMode) {
                   damage -= 1.5f;
                }
             }
@@ -651,15 +651,21 @@ public class Affixes {
     */
    public static final Affix PRICKY_ARMOR = register(id("pricky_armor"),
          (DamageHooks.PostDamage) (c, amount) -> {
-            int result = RANDOM.nextBetween(1, 5);
             if (c.source().getAttacker() instanceof LivingEntity attacker) {
                int odds = 2;
-               if (result <= odds || debugMode) {
-                  attacker.addStatusEffect(
-                        new StatusEffectInstance(POISON, 20 * 5, 2));
-                  attacker.addStatusEffect(
-                        new StatusEffectInstance(BLEED, 20 * 30, 1));
-               }
+               onChance(5)
+                     .debug()
+                     .lucky(() -> {
+                        statusEffect(POISON)
+                              .duration(20 * 5)
+                              .amplifier(2)
+                              .apply(attacker);
+                        statusEffect(BLEED)
+                              .duration(20 * 30)
+                              .amplifier(1)
+                              .apply(attacker);
+                     })
+                     .apply(odds);
             }
          });
    /**
@@ -668,12 +674,12 @@ public class Affixes {
    public static final Affix WEAKENING_HIT = register(id("weakening_hit"),
          (PostEnchantments) (total, context) -> {
             if (context.target() instanceof LivingEntity target) {
-               target.addStatusEffect(
-                     new StatusEffectInstance(WEAKNESS, 20 * 25),
-                     context.attacker());
-               target.addStatusEffect(
-                     new StatusEffectInstance(VULNERABILITY, 20 * 20),
-                     context.attacker());
+               statusEffect(WEAKNESS)
+                     .duration(20 * 25)
+                     .apply(target, context.attacker());
+               statusEffect(VULNERABILITY)
+                     .duration(20 * 20)
+                     .apply(target, context.attacker());
             }
             return total * 1.1f;
          });
@@ -704,9 +710,10 @@ public class Affixes {
                 && (isMarkedBy(target, context.attacker()))) {
                LOGGER.info("thru affix data: {}",
                      isMarkedBy(target, context.attacker()));
-               target.addStatusEffect(
-                     new StatusEffectInstance(BLEED, 20 * 20, 1),
-                     context.attacker());
+               statusEffect(BLEED)
+                     .duration(20 * 20)
+                     .amplifier(1)
+                     .apply(target, context.attacker());
             }
          });
    /**
@@ -731,8 +738,11 @@ public class Affixes {
                       && ((getHunter(target) != null
                            && getHunter(target).isAlive()))) {
                      triggered = true;
-                     target.addStatusEffect(
-                           new StatusEffectInstance(STRENGTH, 20 * 20, 1));
+                     statusEffect(STRENGTH)
+                           .duration(20 * 20)
+                           .amplifier(1)
+                           .apply(target);
+
                   } else if (!isMarked(target)
                              || !getHunter(target).isAlive()) {
                      triggered = false;
@@ -759,11 +769,13 @@ public class Affixes {
                   if (target.isDead()) {
                      corpses += 1;
                   } else if (isHit) {
-                     final int result = RANDOM.nextBetween(1, 100);
-                     if (result <= corpses) {
-                        target.addStatusEffect(
-                              new StatusEffectInstance(WITHER, 20 * 20, 1));
-                     }
+                     onChance(100)
+                           .noDebug()
+                           .lucky(() -> statusEffect(WITHER)
+                                 .duration(20 * 20)
+                                 .amplifier(1)
+                                 .apply(target))
+                           .apply(corpses);
                      corpses = max(0, corpses - 1);
                   }
                   context.affixedItemData().putInt("corpses", corpses);
@@ -800,28 +812,29 @@ public class Affixes {
     */
    public static final Affix BARBED_SHIELD = register(id("barbed_shield"),
          (DamageHooks.PostShieldBlock) (context, amount) -> {
-            final int result = RANDOM.nextBetween(1, 1000);
-            final int odds = 200;
-            if (result <= odds || debugMode) {
-               context.source()
-                      .getSource()
-                      .damage(new DamageSource(
-                            context.source().getTypeRegistryEntry(),
-                            context.victim()), amount * .55f);
-            } else {
-               context.source()
-                      .getSource()
-                      .damage(new DamageSource(
-                            context.source().getTypeRegistryEntry(),
-                            context.victim()), amount * .15f);
-            }
-            final int secret = 1;
-            if (result <= secret || debugMode) {
-               if (context.source()
-                          .getSource() instanceof LivingEntity attacker) {
-                  attacker.addStatusEffect(
-                        new StatusEffectInstance(BLEED, 20 * 5, 4));
-               }
+            onChance(10)
+                  .debug()
+                  .lucky(() -> context.source()
+                                      .getSource()
+                                      .damage(new DamageSource(
+                                            context.source().getTypeRegistryEntry(),
+                                            context.victim()), amount * .55f))
+                  .unlucky(() -> context.source()
+                                        .getSource()
+                                        .damage(new DamageSource(
+                                              context.source().getTypeRegistryEntry(),
+                                              context.victim()), amount * .15f))
+                  .apply(2);
+            if (context.source().getSource() instanceof LivingEntity attacker) {
+               // secret
+               onChance(1000)
+                     .debug()
+                     .lucky(() -> statusEffect(BLEED)
+                           .duration(20 * 5)
+                           .amplifier(4)
+                           .apply(attacker))
+                     .apply(1);
+
             }
          });
    /**
@@ -963,24 +976,27 @@ public class Affixes {
    public static final Affix DISCHARGE = register(id("discharge"),
          (PostEnchantments) (total, context) -> {
             final int charge = getCharge(context.attacker());
+            final float[] damage = {total};
             if (!context.world().isClient()) {
                if (charge > 1000) {
-                  int odds = charge / 100;
-                  if (RANDOM.nextBetween(1, 100) <= odds) {
-                     total *= 10;
-                     context.world()
-                            .createExplosion(null,
-                                  null,
-                                  new ExplosionBehavior(),
-                                  context.target().getPos(),
-                                  2.22f,
-                                  false,
-                                  World.ExplosionSourceType.NONE);
-                  }
+                  onChance(100)
+                        .noDebug()
+                        .lucky(() -> {
+                           damage[0] *= 10;
+                           context.world()
+                                  .createExplosion(null,
+                                        null,
+                                        new ExplosionBehavior(),
+                                        context.target().getPos(),
+                                        2.22f,
+                                        false,
+                                        World.ExplosionSourceType.NONE);
+                        })
+                        .apply(charge / 100);
                   setCharge(context.attacker(), charge % 100);
                }
             }
-            return total;
+            return damage[0];
          });
    /**
     * <b>Chargeback:</b> takes away 10% of target's Charge and increases your Charge by 10%
@@ -1061,14 +1077,6 @@ public class Affixes {
                            (ServerWorld) ctx.target().getWorld(),
                            ctx.target().getBlockPos(), SpawnReason.EVENT))
                      .apply(socSelfLightningChance);
-               // final int chance = RANDOM.nextBetween(1, 10000);
-               // if (chance <= socSelfLightningChance) {
-               //    EntityType.LIGHTNING_BOLT.spawn((ServerWorld) ctx.world(),
-               //          ctx.attacker().getBlockPos(), SpawnReason.EVENT);
-               // } else {
-               //    EntityType.LIGHTNING_BOLT.spawn((ServerWorld) ctx.target().getWorld(),
-               //          ctx.target().getBlockPos(), SpawnReason.EVENT);
-               // }
                setCharge(ctx.attacker(), getCharge(ctx.attacker()) - 1250);
             }
          });
@@ -1079,39 +1087,41 @@ public class Affixes {
          (DamageHooks.PostDamage) (ctx, damage) -> {
             if (ctx.victim() instanceof LivingEntity victim
                 && !victim.getWorld().isClient()) {
-               final int chance = RANDOM.nextBetween(1, 1000);
-               if (chance <= 123 || debugMode) {
-                  for (int i = 0; i < 3; i++) {
-                     if (getCharge(victim) > 150) {
-                        var blockPos = victim.getBlockPos()
-                                             .add(-2 + RANDOM.nextInt(5),
-                                                   1,
-                                                   -2 + RANDOM.nextInt(5));
-                        var vex = EntityType.VEX.create(victim.getWorld());
-                        if (vex != null) {
-                           vex.refreshPositionAndAngles(blockPos, 0.0f, 0.0f);
-                           vex.initialize(
-                                 ((ServerWorld) victim.getWorld()),
-                                 victim.getWorld().getLocalDifficulty(blockPos),
-                                 SpawnReason.MOB_SUMMONED, null, null);
-                           // this WILL crash
-                           // edit: this DID crash
-                           // we need this tho or a way to do this
+               onChance(1000)
+                     .debug()
+                     .lucky(() -> {
+                        for (int i = 0; i < 3; i++) {
+                           if (getCharge(victim) > 150) {
+                              var blockPos = victim.getBlockPos()
+                                                   .add(-2 + RANDOM.nextInt(5),
+                                                         1,
+                                                         -2 + RANDOM.nextInt(5));
+                              var vex = EntityType.VEX.create(victim.getWorld());
+                              if (vex != null) {
+                                 vex.refreshPositionAndAngles(blockPos, 0.0f, 0.0f);
+                                 vex.initialize(
+                                       ((ServerWorld) victim.getWorld()),
+                                       victim.getWorld().getLocalDifficulty(blockPos),
+                                       SpawnReason.MOB_SUMMONED, null, null);
+                                 // this WILL crash
+                                 // edit: this DID crash
+                                 // we need this tho or a way to do this
 //                           vex.setOwner((MobEntity) victim);
-                           vex.setLifeTicks(20 * 60);
-                           vex.setBounds(blockPos);
-                           vex.setCustomName(Text.literal("Charged Pixie"));
-                           vex.setHealth(10f);
-                           vex.setAttacker(
-                                 (LivingEntity) ctx.source().getAttacker());
-                           // todo pixie no hurt victim
-                           ((ServerWorld) victim.getWorld())
-                                 .spawnEntityAndPassengers(vex);
-                           setCharge(victim, getCharge(victim) - 150);
+                                 vex.setLifeTicks(20 * 60);
+                                 vex.setBounds(blockPos);
+                                 vex.setCustomName(Text.literal("Charged Pixie"));
+                                 vex.setHealth(10f);
+                                 vex.setAttacker(
+                                       (LivingEntity) ctx.source().getAttacker());
+                                 // todo pixie no hurt victim
+                                 ((ServerWorld) victim.getWorld())
+                                       .spawnEntityAndPassengers(vex);
+                                 setCharge(victim, getCharge(victim) - 150);
+                              }
+                           }
                         }
-                     }
-                  }
-               }
+                     })
+                     .apply(123);
             }
          });
    /**
@@ -1134,12 +1144,18 @@ public class Affixes {
             if (isHit
                 && !ctx.world().isClient()
                 && ctx.attacker().hasStatusEffect(WEAKNESS)) {
-               ctx.attacker()
-                  .addStatusEffect(new StatusEffectInstance(SPEED, 20 * 120, 1));
-               ctx.attacker()
-                  .addStatusEffect(new StatusEffectInstance(REGENERATION, 20 * 30));
+               statusEffect(SPEED)
+                     .duration(20 * 120)
+                     .amplifier(1)
+                     .apply(ctx.attacker());
+               statusEffect(REGENERATION)
+                     .duration(20 * 30)
+                     .apply(ctx.attacker());
                if (ctx.target() instanceof LivingEntity target) {
-                  target.addStatusEffect(new StatusEffectInstance(SLOWNESS, 20 * 45, 1));
+                  statusEffect(SLOWNESS)
+                        .duration(20 * 45)
+                        .amplifier(1)
+                        .apply(target);
                }
             }
          });
