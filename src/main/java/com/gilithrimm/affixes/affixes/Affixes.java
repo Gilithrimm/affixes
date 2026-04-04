@@ -38,7 +38,7 @@ import static com.gilithrimm.affixes.builders.BuilderFactory.onChance;
 import static com.gilithrimm.affixes.builders.BuilderFactory.statusEffect;
 import static com.gilithrimm.affixes.config.AffixConfig.*;
 import static com.gilithrimm.affixes.effects.AffixEffects.BLEED;
-import static com.gilithrimm.affixes.effects.AffixEffects.VULNERABILITY;
+import static com.gilithrimm.affixes.effects.AffixEffects.FRAGILE;
 import static com.gilithrimm.affixes.hooks.AttackHooks.*;
 import static com.gilithrimm.affixes.hooks.DamageHooks.PostArmor;
 import static java.lang.Math.max;
@@ -329,7 +329,7 @@ public class Affixes {
                                               .generic(), 5);
                      }
                   }
-                  case 3 -> context.attacker()
+                  case 2 -> context.attacker()
                                    .damage(context.world()
                                                   .getDamageSources()
                                                   .generic(), 5);
@@ -440,8 +440,8 @@ public class Affixes {
             }
          });
    /**
-    * <b>Striking the Weaknesses:</b> applies Vulnerability I for 30s on 20% chance or
-    * Vulnerability II for 45s at 35% chance if target has Bleed
+    * <b>Striking the Weaknesses:</b> applies Fragile I for 30s on 20% chance or
+    * Fragile II for 45s at 35% chance if target has Bleed
     */
    public static final Affix STRIKING_THE_WEAKNESSES = register(
          id("striking_the_weaknesses"),
@@ -451,7 +451,7 @@ public class Affixes {
                   int odds = 7;
                   onChance(20)
                         .debug()
-                        .lucky(() -> statusEffect(VULNERABILITY)
+                        .lucky(() -> statusEffect(FRAGILE)
                               .duration(20 * 45)
                               .amplifier(1)// amplifier := intended lvl - 1
                               .apply(entity, context.attacker()))
@@ -460,7 +460,7 @@ public class Affixes {
                   int odds = 4;
                   onChance(20)
                         .debug()
-                        .lucky(() -> statusEffect(VULNERABILITY)
+                        .lucky(() -> statusEffect(FRAGILE)
                               .duration(20 * 30)
                               .apply(entity, context.attacker()))
                         .apply(odds);
@@ -469,8 +469,8 @@ public class Affixes {
          });
    /**
     * <b>Puncturing Wounds:</b><br>
-    * if target has Vulnerability &amp; Bleed: increases lvl by 1 &amp; decreases duration by 10% at 20% chance<br>
-    * if target has Vulnerability &amp; no Bleed: applies Bleed II for 60s at 40% chance<br>
+    * if target has Fragile &amp; Bleed: increases lvl by 1 &amp; decreases duration by 10% at 20% chance<br>
+    * if target has Fragile &amp; no Bleed: applies Bleed II for 60s at 40% chance<br>
     * if target has Bleed: increases lvl by 1 &amp; decreases duration by 20% at 15% chance<br>
     * if target has no Bleed: applies Bleed I for 45s at 30% chance<br>
     */
@@ -478,7 +478,7 @@ public class Affixes {
          id("puncturing_wounds"),// hehe 3556 dmg per hit
          (PostHit) (isHit, damage, c) -> {
             if (isHit && c.target() instanceof LivingEntity entity) {
-               if (entity.hasStatusEffect(VULNERABILITY)) {
+               if (entity.hasStatusEffect(FRAGILE)) {
                   if (entity.hasStatusEffect(BLEED)) {
                      int odds = 4;
                      onChance(20)
@@ -669,7 +669,7 @@ public class Affixes {
             }
          });
    /**
-    * <b>Weakening Hit:</b> applies Weakness I for 25s and Vulnerability I for 20s; also deal 10% more dmg
+    * <b>Weakening Hit:</b> applies Weakness I for 25s and Fragile I for 20s; also deal 10% more dmg
     */
    public static final Affix WEAKENING_HIT = register(id("weakening_hit"),
          (PostEnchantments) (total, context) -> {
@@ -677,7 +677,7 @@ public class Affixes {
                statusEffect(WEAKNESS)
                      .duration(20 * 25)
                      .apply(target, context.attacker());
-               statusEffect(VULNERABILITY)
+               statusEffect(FRAGILE)
                      .duration(20 * 20)
                      .apply(target, context.attacker());
             }
@@ -1055,7 +1055,9 @@ public class Affixes {
             @Override
             public void postHit(boolean isHit, float damage, AttackHookContext context) {
                if (isHit) {
-                  // take away target's charge & do sth w/ it???
+                  // spend 5000 charge to deal -5..5 dmg to target
+                  // on roll<0 apply vulnerable {amp=|dmg|} for 25..55s
+                  // on max roll take 15% of target's charge to heal self for {that 15% / self's charge} (only if target's charge/80 ≤ self's charge)
                }
             }
          });
@@ -1206,6 +1208,11 @@ public class Affixes {
 
    // todo make data in affixes its own api/encapsulated thing
    //  maybe as part of HookContext???
+
+   // todo probably mixin custom item cooldown manager
+   //  to add countdown-based step-by-step kind of cooldown
+   //  instead of smooth tick-based one
+   //  while also keeping the old one for vanilla reasons
 
    /*
    currently we have 3 options for custom affix data:

@@ -39,7 +39,8 @@ public class AffixItems {
    /**
     * Combine this with an item in an anvil to add an affix onto the item, consuming this item in the process
     */
-   public static final Item INSCRIBED_AFFIX = register("inscribed_affix",
+   public static final Item AFFIX_PAPER = register(
+         "inscribed_affix",// todo change to affix_paper w/o breaking everything
          new Item(new Settings().rarity(Rarity.RARE)));
 
    private AffixItems() {}
@@ -62,7 +63,7 @@ public class AffixItems {
       public TypedActionResult<ItemStack> use(World world, PlayerEntity user,
                                               Hand hand) {
          ItemStack inHand = user.getStackInHand(hand);
-         ItemStack affixPaper = new ItemStack(INSCRIBED_AFFIX);
+         ItemStack affixPaper = new ItemStack(AFFIX_PAPER);
          var affixList = AffixRegistry.stream()
                                       .filter(a -> !a.hook().isCreativeOnly())
                                       .collect(Collectors.toCollection(

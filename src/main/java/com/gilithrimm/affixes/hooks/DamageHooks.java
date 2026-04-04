@@ -1,5 +1,7 @@
 package com.gilithrimm.affixes.hooks;
 
+import com.gilithrimm.affixes.effects.Fragile;
+
 /**
  * a collection of all the functions in {@link DamageHook} interface, separated into
  * {@link FunctionalInterface functional interfaces} with default implementations &amp;
@@ -133,7 +135,7 @@ public abstract class DamageHooks {
    /**
     * Called after calculating how much did damage change from status effects (like
     * <a href="https://minecraft.wiki/w/Resistance">Resistance</a> and
-    * {@link com.gilithrimm.affixes.effects.Vulnerability Vulnerability}
+    * {@link Fragile Fragile}
     *
     * @see com.gilithrimm.affixes.hooks.DamageHook#postResistance(DamageHookContext, float)
     */

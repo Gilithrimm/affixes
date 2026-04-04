@@ -5,7 +5,7 @@ import com.gilithrimm.affixes.affixes.Affixes;
 import com.gilithrimm.affixes.affixes.interfaces.IAffixEntityData;
 import com.gilithrimm.affixes.affixes.interfaces.IAffixable;
 import com.gilithrimm.affixes.effects.Bleed;
-import com.gilithrimm.affixes.effects.Vulnerability;
+import com.gilithrimm.affixes.effects.Fragile;
 import com.gilithrimm.affixes.hooks.DamageHook;
 import com.gilithrimm.affixes.hooks.DamageHooks.*;
 import com.gilithrimm.affixes.hooks.Hook;
@@ -47,12 +47,12 @@ import java.util.function.Function;
 
 import static com.gilithrimm.affixes.AffixesMod.NBT_PREFIX;
 import static com.gilithrimm.affixes.effects.AffixEffects.BLEED;
-import static com.gilithrimm.affixes.effects.AffixEffects.VULNERABILITY;
+import static com.gilithrimm.affixes.effects.AffixEffects.FRAGILE;
 
 /**
  * mixin for {@link LivingEntity}, allowing a bunch of shit to work - {@link IAffixEntityData data saved on entities for affixes}
  * (for example {@link Affixes#HUNTER_MARK Hunter's Mark} {@link Affixes#MARK_OF_THE_BEAST and} {@link Affixes#BLOOD_MARKS related} to it),
- * {@link DamageHook}, {@link Bleed bleed}, {@link Vulnerability vulnerability}
+ * {@link DamageHook}, {@link Bleed bleed}, {@link Fragile vulnerability}
  *
  * @since this part's actually quite a bit newer (together with damage hooks as mentioned above) -
  * which explains overabundance of affixes triggering on attack and lack of affixes triggering on damage
@@ -271,8 +271,8 @@ public abstract class LivingEntityMixin extends EntityMixin
    @ModifyExpressionValue(method = "modifyAppliedDamage",
                           at = @At(value = "MIXINEXTRAS:EXPRESSION"))
    private int vulnerableAndResistant(int original) {
-      if (hasStatusEffect(VULNERABILITY)) {
-         original -= (getStatusEffect(VULNERABILITY).getAmplifier() + 1) * 5;
+      if (hasStatusEffect(FRAGILE)) {
+         original -= (getStatusEffect(FRAGILE).getAmplifier() + 1) * 5;
       }
       return original;
    }
@@ -302,8 +302,8 @@ public abstract class LivingEntityMixin extends EntityMixin
       if (original != 0 &&
           (!hasStatusEffect(StatusEffects.RESISTANCE) ||
            src.isIn(DamageTypeTags.BYPASSES_RESISTANCE))) {
-         if (hasStatusEffect(VULNERABILITY)) {
-            int impact = 5 + getStatusEffect(VULNERABILITY).getAmplifier() + 1;
+         if (hasStatusEffect(FRAGILE)) {
+            int impact = 5 + getStatusEffect(FRAGILE).getAmplifier() + 1;
             original *= impact / 5f;
          }
       }

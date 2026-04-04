@@ -12,10 +12,10 @@ import static com.gilithrimm.affixes.AffixesMod.id;
  */
 public class AffixEffects {
    /**
-    * {@link Vulnerability} registered
+    * {@link Fragile} registered
     */
-   public static final Vulnerability VULNERABILITY = register("vulnerable",
-         new Vulnerability(StatusEffectCategory.HARMFUL, 0x11201e));
+   public static final Fragile FRAGILE = register("fragile",
+         new Fragile(StatusEffectCategory.HARMFUL, 0x11201e));
    /**
     * {@link Bleed} registered
     */

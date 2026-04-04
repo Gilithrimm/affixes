@@ -1,5 +1,6 @@
 package com.gilithrimm.affixes.hooks;
 
+import com.gilithrimm.affixes.effects.Fragile;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -32,7 +33,7 @@ public interface DamageHook extends Hook {
    /**
     * Called after calculating how much did damage change from status effects (like
     * <a href="https://minecraft.wiki/w/Resistance">Resistance</a> and
-    * {@link com.gilithrimm.affixes.effects.Vulnerability Vulnerability})
+    * {@link Fragile Fragile})
     *
     * @param context damage context, i.e. attacker, victim, damage type etc.
     * @param amount  total damage calculated so far

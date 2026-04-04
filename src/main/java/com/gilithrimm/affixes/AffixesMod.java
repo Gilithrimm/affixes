@@ -29,7 +29,7 @@ public class AffixesMod implements ModInitializer {
     */
    public static final String NBT_PREFIX = "affixData";
    /**
-    * nbt prefix for {@link AffixItems#INSCRIBED_AFFIX Inscribed Affix item} and all of everything related to that
+    * nbt prefix for {@link AffixItems#AFFIX_PAPER Affix Paper item} and all of everything related to that
     */
    public static final String NBT_STORE_PREFIX = "stored_affixes";
    private static final String MOD_ID = "affixes";

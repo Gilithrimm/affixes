@@ -6,14 +6,14 @@ import net.minecraft.entity.effect.StatusEffectCategory;
 /**
  * reverse Resistance, basically - increases damage taken by (20% * lvl)
  */
-public class Vulnerability extends StatusEffect {
+public class Fragile extends StatusEffect {
    /**
     * Java requires 'constructor matching super' so it got 'constructor matching super'
     *
     * @param category this one's harmful 100%
     * @param color    a color of the particles I guess
     */
-   public Vulnerability(StatusEffectCategory category, int color) {
+   public Fragile(StatusEffectCategory category, int color) {
       super(category, color);
    }
 }
