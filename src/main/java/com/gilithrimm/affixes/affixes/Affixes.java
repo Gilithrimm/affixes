@@ -88,7 +88,7 @@ public class Affixes {
             public List<Text> advancedTooltip() {
                List<Text> tooltip = PostAttribute.super.advancedTooltip();
                tooltip.add(
-                     translatable("affix.affixes.singular_strike.tooltip`",
+                     translatable("affix.affixes.singular_strike.tooltip",
                            (damageModifier < 0) ? "" : "+", damageModifier));
                return tooltip;
             }
