@@ -115,7 +115,7 @@ public interface AttackHook extends Hook {
     * <b>after</b> {@link AttackHook#postSweeping(float, LivingEntity, AttackHookContext) postSweeping()}
     * and <b>in the same order</b> as during normal attack calculations.
     *
-    * @return whether this hook should trigger during sweeping attack calculations (false by default)
+    * @return whether this hook should trigger during sweeping attack calculations (default false)
     */
    default boolean shouldTriggerWhenSweeping() {
       return false;

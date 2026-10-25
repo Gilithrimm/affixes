@@ -52,7 +52,6 @@ public class AffixItems {
    /**
     * calling this function forces all the static fields to init which is the only reason it exists at all
     */
-   public static void init() {}
 
    private static class ScribedPaper extends Item {
       public ScribedPaper(Settings settings) {
@@ -77,5 +76,6 @@ public class AffixItems {
          return TypedActionResult.consume(inHand);
       }
    }
+   public static void forceLoad() {}
 
 }

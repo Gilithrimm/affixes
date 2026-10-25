@@ -44,7 +44,7 @@ public class AffixesMod implements ModInitializer {
    // -
 
    /**
-    * fabric requires this public <br>
+    * fabric requires this to be public <br>
     * otherwise 'exception when loading entrypoints for mod "affixes"' <br>
     * so. there you have it. it's public now.
     */
@@ -109,11 +109,11 @@ public class AffixesMod implements ModInitializer {
 
    @Override
    public void onInitialize() {
-      Affixes.init();
-      AffixItems.init();
+      Affixes.forceLoad();
+      AffixItems.forceLoad();
       AffixCommand.init();
-      AffixEffects.init();
+      AffixEffects.forceLoad();
       MidnightConfig.init(MOD_ID, AffixConfig.class);
-      AffixRegistry.init();
+      AffixRegistry.forceLoad();
    }
 }

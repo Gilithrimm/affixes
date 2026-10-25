@@ -10,6 +10,7 @@ import net.minecraft.server.world.ServerWorld;
  * A collection of functions specifically built to manage {@link Affixes#HUNTER_MARK Hunter's Mark}
  * across Affixes, abstracting away all NBT- and Mixin-related stuff
  */
+// todo rework into sth more physical
 public final class HunterMarkManager {
    private HunterMarkManager() {}
 

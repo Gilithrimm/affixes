@@ -4,7 +4,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 
 /**
- * increases dmg taken by a %, depending on lvl
+ * increases dmg taken depending on a lvl in a non-linear fashion (lvl<sup>2</sup>/50)
  */
 public class Bleed extends StatusEffect {
    /**
@@ -27,3 +27,6 @@ public class Bleed extends StatusEffect {
       return lvl * lvl / 50f;
    }
 }
+
+//todo rework?? it feels extremely insignificant rn
+// unless you're running Puncturing Wounds in which case it turns from insignificant to unbalanced

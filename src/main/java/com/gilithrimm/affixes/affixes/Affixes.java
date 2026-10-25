@@ -3,10 +3,7 @@ package com.gilithrimm.affixes.affixes;
 
 import com.gilithrimm.affixes.affixes.interfaces.IAffixable;
 import com.gilithrimm.affixes.config.AffixConfig;
-import com.gilithrimm.affixes.hooks.AttackHook;
-import com.gilithrimm.affixes.hooks.AttackHookAdapter;
-import com.gilithrimm.affixes.hooks.DamageHookAdapter;
-import com.gilithrimm.affixes.hooks.DamageHooks;
+import com.gilithrimm.affixes.hooks.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -66,9 +63,9 @@ Affixes ideas:
  */
 public class Affixes {
    /**
-    * <b>Sharpened Blade:</b> deal +5 dmg on hit, lower by 1 with each hit, resets after killing the enemy
+    * <b>Singular Strike:</b> deal +5 dmg on hit, lower by 1 with each hit, resets after killing the enemy
     */
-   public static final Affix SHARPENED_BLADE = register(id("sharpened_blade"),
+   public static final Affix SINGULAR_STRIKE = register(id("singular_strike"),
          new PostAttribute() {
             private int damageModifier = 0;
             private Entity previous;
@@ -91,7 +88,7 @@ public class Affixes {
             public List<Text> advancedTooltip() {
                List<Text> tooltip = PostAttribute.super.advancedTooltip();
                tooltip.add(
-                     translatable("affix.affixes.sharpened_blade.tooltip",
+                     translatable("affix.affixes.singular_strike.tooltip`",
                            (damageModifier < 0) ? "" : "+", damageModifier));
                return tooltip;
             }
@@ -217,7 +214,7 @@ public class Affixes {
             }
          });
    /**
-    * <b>Burning Passion:</b> deal +3 dmg if you're on fire, deal +2 dmg on top if target's also on fire.
+    * <b>Burning Passion:</b> deal +5 dmg if you're on fire, deal +2 dmg on top if target's also on fire.
     * {@link AttackHook#shouldTriggerWhenSweeping() Counts sweeping attacks.}
     */
    public static final Affix BURNING_PASSION = register(id("burning_passion"),
@@ -225,7 +222,7 @@ public class Affixes {
             @Override
             public float postAttribute(float total, AttackHookContext context) {
                if (context.attacker().isOnFire()) {
-                  total += 3;
+                  total += 5;
                   if (context.target().isOnFire()) {
                      total += 2;
                   }
@@ -405,7 +402,7 @@ public class Affixes {
 
             // multiple entities marked by the same fucking guy at THE SAME TIME
             // fixed: reimplementing via AED automagically fixed this
-            // todo: tell hunter that the mark was changed
+            // fixme: tell hunter that the mark was changed
             @Override
             public void postHit(boolean isHit,
                                 float damage, AttackHookContext context) {
@@ -638,13 +635,19 @@ public class Affixes {
     */
    public static final Affix HARD_SKIN = register(id("hard_skin"),
          (PostArmor) (context, amount) -> {
-            float damage = amount;
+            var ref = new Object() {//man I hate java sometimes
+               float damage = amount;
+            };
             for (int i = 0; i <= (int) amount / 2; i++) {
-               if (RANDOM.nextBetween(1, 4) == 1 || debugMode) {
-                  damage -= 1.5f;
-               }
+//               if (RANDOM.nextBetween(1, 4) == 1 || debugMode) {
+//                  damage -= 1.5f;
+//               }
+               onChance(4)
+                     .debug()
+                     .lucky(() -> ref.damage -= 1.5f)
+                     .apply(1);
             }
-            return damage;
+            return ref.damage;
          });
    /**
     * <b>Pricky Armor:</b> applies Poison III for 5s and Bleed II for 30s to the attacker after being hit at 40% chance
@@ -829,7 +832,7 @@ public class Affixes {
                // secret
                onChance(1000)
                      .debug()
-                     .lucky(() -> statusEffect(BLEED)
+                     .lucky(() -> hiddenStatusEffect(BLEED)
                            .duration(20 * 5)
                            .amplifier(4)
                            .apply(attacker))
@@ -843,7 +846,7 @@ public class Affixes {
     */
    public static final Affix CHARGING_STRIKES = register(id("charging_strikes"),
          new PostHit() {
-            int charge = 0;// todo server doesn't update the client
+            int charge = 0;// fixme server doesn't update the client
 
             @Override
             public void postHit(boolean isHit, float damage,
@@ -1083,50 +1086,6 @@ public class Affixes {
             }
          });
    /**
-    * <b>Charged Pixies:</b> summons Vexes for 60s that follow the player that summoned them
-    */
-   public static final Affix CHARGED_PIXIES = register(id("charged_pixies"),
-         (DamageHooks.PostDamage) (ctx, damage) -> {
-            if (ctx.victim() instanceof LivingEntity victim
-                && !victim.getWorld().isClient()) {
-               onChance(1000)
-                     .debug()
-                     .lucky(() -> {
-                        for (int i = 0; i < 3; i++) {
-                           if (getCharge(victim) > 150) {
-                              var blockPos = victim.getBlockPos()
-                                                   .add(-2 + RANDOM.nextInt(5),
-                                                         1,
-                                                         -2 + RANDOM.nextInt(5));
-                              var vex = EntityType.VEX.create(victim.getWorld());
-                              if (vex != null) {
-                                 vex.refreshPositionAndAngles(blockPos, 0.0f, 0.0f);
-                                 vex.initialize(
-                                       ((ServerWorld) victim.getWorld()),
-                                       victim.getWorld().getLocalDifficulty(blockPos),
-                                       SpawnReason.MOB_SUMMONED, null, null);
-                                 // this WILL crash
-                                 // edit: this DID crash
-                                 // we need this tho or a way to do this
-//                           vex.setOwner((MobEntity) victim);
-                                 vex.setLifeTicks(20 * 60);
-                                 vex.setBounds(blockPos);
-                                 vex.setCustomName(Text.literal("Charged Pixie"));
-                                 vex.setHealth(10f);
-                                 vex.setAttacker(
-                                       (LivingEntity) ctx.source().getAttacker());
-                                 // todo pixie no hurt victim
-                                 ((ServerWorld) victim.getWorld())
-                                       .spawnEntityAndPassengers(vex);
-                                 setCharge(victim, getCharge(victim) - 150);
-                              }
-                           }
-                        }
-                     })
-                     .apply(123);
-            }
-         });
-   /**
     * <b>Blood Rage:</b> multiplies damage dealt by the {.1 * lvl of Bleeding on the attacker}
     */
    public static final Affix BLOOD_RAGE = register(id("blood_rage"),
@@ -1209,11 +1168,6 @@ public class Affixes {
    // todo make data in affixes its own api/encapsulated thing
    //  maybe as part of HookContext???
 
-   // todo probably mixin custom item cooldown manager
-   //  to add countdown-based step-by-step kind of cooldown
-   //  instead of smooth tick-based one
-   //  while also keeping the old one for vanilla reasons
-
    /*
    currently we have 3 options for custom affix data:
    1. data on entity - persistent, affix-independent, item-independent
@@ -1228,7 +1182,7 @@ public class Affixes {
    /**
     * calling this function forces all the static fields to init which is the only reason it exists at all
     */
-   public static void init() {
+   public static void forceLoad() {
       // stupid init order
    }
 }

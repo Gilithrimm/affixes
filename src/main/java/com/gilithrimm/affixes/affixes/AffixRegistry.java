@@ -62,7 +62,7 @@ public class AffixRegistry {
    /**
     * run this to force init all the static fields
     */
-   public static void init() {
+   public static void forceLoad() {
       LOGGER.info("Currently registered {} affixes", registrySize());
    }
 

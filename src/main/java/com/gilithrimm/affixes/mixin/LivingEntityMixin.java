@@ -261,7 +261,7 @@ public abstract class LivingEntityMixin extends EntityMixin
       return affixes$affixData.containsKey(key);
    }
 
-   // vulnerable status effect
+   // fragile status effect todo split into separate mixins
 
    @Definition(id = "getAmplifier",
                method = "Lnet/minecraft/entity/effect/StatusEffectInstance;getAmplifier()I")
@@ -270,7 +270,7 @@ public abstract class LivingEntityMixin extends EntityMixin
    @Expression("(this.getStatusEffect(?).getAmplifier() + 1) * 5")
    @ModifyExpressionValue(method = "modifyAppliedDamage",
                           at = @At(value = "MIXINEXTRAS:EXPRESSION"))
-   private int vulnerableAndResistant(int original) {
+   private int fragileAndResistant(int original) {
       if (hasStatusEffect(FRAGILE)) {
          original -= (getStatusEffect(FRAGILE).getAmplifier() + 1) * 5;
       }
@@ -297,11 +297,11 @@ public abstract class LivingEntityMixin extends EntityMixin
          StatusEffect effect);
 
    @ModifyReturnValue(method = "modifyAppliedDamage", at = @At("RETURN"))
-   private float vulnerable(float original,
-                            @Local(argsOnly = true) DamageSource src) {
+   private float fragile(float original,
+                         @Local(argsOnly = true) DamageSource src) {
       if (original != 0 &&
-          (!hasStatusEffect(StatusEffects.RESISTANCE) ||
-           src.isIn(DamageTypeTags.BYPASSES_RESISTANCE))) {
+            (!hasStatusEffect(StatusEffects.RESISTANCE) ||
+                  src.isIn(DamageTypeTags.BYPASSES_RESISTANCE))) {
          if (hasStatusEffect(FRAGILE)) {
             int impact = 5 + getStatusEffect(FRAGILE).getAmplifier() + 1;
             original *= impact / 5f;

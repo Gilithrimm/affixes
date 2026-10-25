@@ -32,6 +32,8 @@ import java.util.stream.IntStream;
 import static com.gilithrimm.affixes.AffixesMod.NBT_PREFIX;
 import static com.gilithrimm.affixes.AffixesMod.RANDOM;
 
+// todo replace w/ smithing table
+//  maybe I don't need mixins to do that
 @Mixin(AnvilScreenHandler.class)
 public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
    @Shadow
@@ -43,6 +45,28 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
          int syncId, PlayerInventory playerInventory,
          ScreenHandlerContext context) {
       super(type, syncId, playerInventory, context);
+   }
+
+   @Unique
+   private static void affixes$reroll(ItemStack s0, ItemStack cp) {
+      // if (s0.hasNbt() && s0.getNbt().contains("affixes")) {
+      //    var current = s0.getNbt().getList("affixes", NbtElement.STRING_TYPE);
+      //
+      // }
+      var slot0 = (IAffixable) (Object) s0;
+      var copied = (IAffixable) (Object) cp;
+      List<Affix> rerolled = List.copyOf(slot0.affixes$getAffixes());
+      LOGGER.info(rerolled.toString());
+      rerolled.forEach(copied::affixes$removeAffix);
+      IntStream.range(0, rerolled.size())
+               .map(i -> RANDOM.nextInt(AffixRegistry.registrySize()))
+               .mapToObj(AffixRegistry::get)
+               .forEach(affix -> {
+                  LOGGER.info(affix.toString());
+                  if (copied.affixes$addAffix(affix)) {
+                     LOGGER.info("added!");
+                  }
+               });
    }
 
    @Inject(method = "updateResult", at = @At(value = "INVOKE",
@@ -102,30 +126,8 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler {
       }
       // reroll
       if (slot1.isOf(AffixItems.AFFIX_REROLL)) {
-         affixes$reroll(slot0, copied);// todo does not work
+         affixes$reroll(slot0, copied);// fixme does not work
       }
-   }
-
-   @Unique
-   private static void affixes$reroll(ItemStack s0, ItemStack cp) {
-      // if (s0.hasNbt() && s0.getNbt().contains("affixes")) {
-      //    var current = s0.getNbt().getList("affixes", NbtElement.STRING_TYPE);
-      //
-      // }
-      var slot0 = (IAffixable) (Object) s0;
-      var copied = (IAffixable) (Object) cp;
-      List<Affix> rerolled = List.copyOf(slot0.affixes$getAffixes());
-      LOGGER.info(rerolled.toString());
-      rerolled.forEach(copied::affixes$removeAffix);
-      IntStream.range(0, rerolled.size())
-               .map(i -> RANDOM.nextInt(AffixRegistry.registrySize()))
-               .mapToObj(AffixRegistry::get)
-               .forEach(affix -> {
-                  LOGGER.info(affix.toString());
-                  if (copied.affixes$addAffix(affix)) {
-                     LOGGER.info("added!");
-                  }
-               });
    }
 
    @ModifyVariable(method = "updateResult", at = @At("STORE"), ordinal = 0)

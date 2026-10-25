@@ -21,12 +21,11 @@ import static com.gilithrimm.affixes.config.AffixConfig.showDescriptions;
  * @param hook the trigger or the 'piece of code' as mentioned before (see {@link Hook})
  * @since the beginning of God, the Universe and all the other silly stuff
  */
-public record Affix(Identifier id, Hook hook) {
+public record Affix(Identifier id, Hook hook) {//todo cost?
    /**
     * Debug Affix - indicates errors during loading of an affix (i.e. id with no affix mapped)
     */
-   public static final Affix NO_AFFIX = new Affix(AffixesMod.id("no_affix"),
-         new Hook() {});
+   public static final Affix NO_AFFIX = new Affix(AffixesMod.id("no_affix"), new Hook() {});
 
    /**
     * Indicates whether some other object is "equal to" this one by comparing
@@ -73,7 +72,7 @@ public record Affix(Identifier id, Hook hook) {
                                .copy()// clean cast ig
                                .formatted(Formatting.DARK_GRAY))
                          .toList());
-      return tooltip;// todo desync between client and server - tooltips don't work in multiplayer
+      return tooltip;// fixme desync between client and server - tooltips don't work in multiplayer
    }
 
    /**

@@ -8,9 +8,9 @@
    "affix.affixes.learning_from_pain": "Learning from Pain",
    "affix.affixes.learning_from_pain.desc": "No pain, no gain!",
    "affix.affixes.learning_from_pain.tooltip": "(currently +%s damage)",
-   "affix.affixes.sharpened_blade": "Sharpened Blade",
-   "affix.affixes.sharpened_blade.desc": "With each hit the blade grows dull.",
-   "affix.affixes.sharpened_blade.tooltip": "(currently %s%s damage)",
+   "affix.affixes.singular_strike": "Singular Strike",
+   "affix.affixes.singular_strike.desc": "With each hit the blade grows dull.",
+   "affix.affixes.singular_strike.tooltip": "(currently %s%s damage)",
    "affix.affixes.burning_passion": "Burning Passion",
    "affix.affixes.burning_passion.desc": "More fire, more fun!",
    "affix.affixes.devil_die": "Deal with Devil: Dice",
@@ -103,7 +103,7 @@
    "commands.affix.add.multiple": "Added affix %s to %s entities",
 
    "effect.affixes.bleed": "Bleed",
-   "effect.affixes.vulnerable": "Vulnerability",
+   "effect.affixes.fragile": "Fragile",
 
    "modmenu.nameTranslation.affixes": "Affixes",
    "modmenu.descriptionTranslation.affixes": "Adds Affixes, or New and Unique™ ways to kill anything and anyone in sight!",

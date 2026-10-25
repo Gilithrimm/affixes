@@ -10,8 +10,11 @@ import static java.lang.Math.max;
  * A collection of functions specifically built to manage Charge across Affixes,
  * abstracting away all NBT-related stuff
  */
-//todo Charge docs
-//todo Overcharge in one location
+// todo Charge docs
+// todo Overcharge in one location
+// todo rework Charge into sth more physical
+// todo make 100 Charge seem like a lot
+// todo new item - Charge Container (stores Charge - equipable in pants/belt(trinkets mod) slot)
 public final class ChargeManager {
 
    private ChargeManager() {}

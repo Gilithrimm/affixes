@@ -6,7 +6,7 @@ import java.util.Set;
 
 /**
  * Used to mark items that can hold affixes and transfer them, but not use them
- * (like {@link net.minecraft.item.EnchantedBookItem enchanted books})
+ * (like {@link net.minecraft.item.EnchantedBookItem enchanted books} with enchants)
  */
 public interface IAffixContainer {
 

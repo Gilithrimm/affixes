@@ -38,6 +38,7 @@ public class BuilderFactory {
     * @return a new {@link StatusEffectBuilder} with no icon, ambience nor particles
     */
    public static StatusEffectBuilder hiddenStatusEffect(StatusEffect type) {
+      //example usage: MineCells Flint summons fire at your location for a bit but gives you fire res
       return new StatusEffectBuilder(type)
             .noAmbient()
             .noIcon()

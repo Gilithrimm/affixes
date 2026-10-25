@@ -5,4 +5,9 @@ package com.gilithrimm.affixes.hooks;
  * todo what the fuck is this supposed to do
  */
 public interface ItemHook extends Hook {
+   // ideas:
+   // - onEquip
+   // - onSelect
+   // - onDurabilityLoss/Gain/Change
+   // - onTick
 }
