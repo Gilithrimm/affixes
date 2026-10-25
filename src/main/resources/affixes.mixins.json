@@ -1,25 +1,25 @@
 {
-   "required": true,
-   "minVersion": "0.8",
-   "package": "com.gilithrimm.affixes.mixin",
-   "compatibilityLevel": "JAVA_17",
-   "mixins": [
-      "AnvilScreenHandlerMixin",
-      "EntityMixin",
-      "ItemStackMixin",
-      "LivingEntityMixin",
-      "MobEntityMixin",
-      "PersistentProjectileEntityMixin",
-      "PlayerEntityMixin",
-      "VexEntityMixin"
-   ],
-   "injectors": {
-      "defaultRequire": 1
-   },
-   "overwrites": {
-      "requireAnnotations": true
-   },
-   "mixinextras": {
-      "minVersion": "0.5.0"
-   }
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.gilithrimm.affixes.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "AnvilScreenHandlerMixin",
+    "EntityMixin",
+    "ItemStackMixin",
+    "LivingEntityMixin",
+    "MobEntityMixin",
+    "PersistentProjectileEntityMixin",
+    "PlayerEntityMixin",
+    "SmithingTableScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "mixinextras": {
+    "minVersion": "0.5.0"
+  }
 }
