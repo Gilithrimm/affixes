@@ -15,7 +15,7 @@ public class AffixEffects {
     * {@link Fragile} registered
     */
    public static final Fragile FRAGILE = register("fragile",
-         new Fragile(StatusEffectCategory.HARMFUL, 0x11201e));
+         new Fragile(StatusEffectCategory.HARMFUL, 0xa290d8));//res is 0x9146f0
    /**
     * {@link Bleed} registered
     */

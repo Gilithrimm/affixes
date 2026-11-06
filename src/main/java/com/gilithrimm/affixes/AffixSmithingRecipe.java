@@ -90,8 +90,6 @@ public class AffixSmithingRecipe implements SmithingRecipe {
 
             return baseCopy;
          }
-
-         //todo widen access to materials
       }
       return ItemStack.EMPTY;//fail??
    }
