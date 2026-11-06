@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.gilithrimm.affixes.AffixesMod.LOGGER;
+import static com.gilithrimm.affixes.affixes.interfaces.IAffixable.getAffixesFromStack;
 import static com.gilithrimm.affixes.hooks.AttackHooks.*;
 
 /**
@@ -62,8 +63,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
    @Inject(method = "attack", at = @At("HEAD"))
    private void setup_attack(Entity target, CallbackInfo ci) {
       affixes$attackHookContext = new AttackHookContext(this, target);
-      affixes$attackHooks.addAll(((IAffixable) (Object) getMainHandStack())
-            .affixes$getAffixes()
+      affixes$attackHooks.addAll(getAffixesFromStack(getMainHandStack())
             .stream()
             .map(Affix::hook)
             .filter(AttackHook.class::isInstance)
@@ -258,8 +258,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
       affixes$damageHooks.addAll(affixedItems
             .stream()
-            .map(IAffixable.class::cast)
-            .map(IAffixable::affixes$getAffixes)
+            .map(IAffixable::getAffixesFromStack)
             .flatMap(Collection::stream)
             .map(Affix::hook)
             .filter(DamageHook.class::isInstance)

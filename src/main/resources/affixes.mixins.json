@@ -4,14 +4,12 @@
   "package": "com.gilithrimm.affixes.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "AnvilScreenHandlerMixin",
     "EntityMixin",
     "ItemStackMixin",
     "LivingEntityMixin",
     "MobEntityMixin",
     "PersistentProjectileEntityMixin",
-    "PlayerEntityMixin",
-    "SmithingTableScreenMixin"
+    "PlayerEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -115,5 +115,6 @@ public class AffixesMod implements ModInitializer {
       AffixEffects.forceLoad();
       MidnightConfig.init(MOD_ID, AffixConfig.class);
       AffixRegistry.forceLoad();
+      AffixSmithingRecipe.forceLoad();
    }
 }

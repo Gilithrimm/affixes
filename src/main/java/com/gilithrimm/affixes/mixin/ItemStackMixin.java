@@ -15,7 +15,6 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,15 +53,15 @@ public abstract class ItemStackMixin implements IAffixable, IAffixContainer {
    }
 
    @Override
-   public List<Affix> affixes$getAffixes() {
+   public Set<Affix> affixes$getAffixes() {
       return hasNbt() && nbt.contains("affixes")
              ? nbt.getList("affixes", NbtElement.STRING_TYPE)
                   .stream()
                   .map(NbtElement::asString)
                   .map(Identifier::tryParse)
                   .map(AffixRegistry::fromRegistry)
-                  .toList()
-             : List.of();
+                  .collect(Collectors.toSet())
+             : Set.of();
    }
 
    @Override

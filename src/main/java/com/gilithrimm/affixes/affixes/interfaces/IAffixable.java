@@ -1,13 +1,23 @@
 package com.gilithrimm.affixes.affixes.interfaces;
 
 import com.gilithrimm.affixes.affixes.Affix;
+import net.minecraft.item.ItemStack;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Implemented in mixins - used to manipulate affixes on items
  */
 public interface IAffixable {
+   static Set<Affix> getAffixesFromStack(ItemStack stack) {
+      return ((IAffixable) (Object) stack).affixes$getAffixes();//might change to null check n stuff
+   }
+
+   static boolean addAffix(ItemStack stack, Affix affix) {
+      return ((IAffixable) (Object) stack).affixes$addAffix(affix);
+   }
+
+
    /**
     * tries adding this affix to this item
     *
@@ -19,9 +29,9 @@ public interface IAffixable {
    /**
     * gives you affixes currently on this item
     *
-    * @return list of affixes on this item
+    * @return set of affixes on this item
     */
-   List<Affix> affixes$getAffixes();
+   Set<Affix> affixes$getAffixes();
 
    /**
     * removes affix from this item. or at least it tries to do that.

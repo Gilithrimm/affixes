@@ -20,6 +20,7 @@ import net.minecraft.text.Text;
 
 import java.util.Collection;
 
+import static com.gilithrimm.affixes.affixes.interfaces.IAffixable.addAffix;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
@@ -96,7 +97,7 @@ public class AffixCommand {
                                                       NbtElementArgumentType.nbtElement())
                                                       .executes(
                                                             AffixDataCommand::execSetItem)))))))
-      );
+                                                );
    }
 
    private static int execAdd(
@@ -114,12 +115,12 @@ public class AffixCommand {
                   () -> Text.translatable("commands.affix.add.single",
                         affix.translation(),
                         targets.iterator().next().getDisplayName()), true
-            );
+                                            );
          } else {
             context.getSource().sendFeedback(
                   () -> Text.translatable("commands.affix.add.multiple",
                         affix.translation(), targets.size()), true
-            );
+                                            );
          }
       }
       return i;
@@ -143,12 +144,12 @@ public class AffixCommand {
                   () -> Text.translatable("commands.affix.remove.single",
                         affix.translation(),
                         targets.iterator().next().getDisplayName()), true
-            );
+                                            );
          } else {
             context.getSource().sendFeedback(
                   () -> Text.translatable("commands.affix.remove.multiple",
                         affix.translation(), targets.size()), true
-            );
+                                            );
          }
       }
       return i;
@@ -162,7 +163,7 @@ public class AffixCommand {
          if (e instanceof LivingEntity living) {
             final ItemStack inHand = living.getMainHandStack();
             if (!inHand.isEmpty()) {
-               if (!((IAffixable) (Object) inHand).affixes$addAffix(affix) &&
+               if (!addAffix(inHand, affix) &&
                    targets.size() == 1) {
                   throw FAILED_AFFIX_CONTAINED_EXCEPTION.create(
                         inHand.getName().getString());

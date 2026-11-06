@@ -8,17 +8,21 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.ExplosionBehavior;
 import org.jetbrains.annotations.Contract;
@@ -31,8 +35,9 @@ import static com.gilithrimm.affixes.affixes.AffixRegistry.register;
 import static com.gilithrimm.affixes.affixes.AffixRegistry.registrySize;
 import static com.gilithrimm.affixes.affixes.ChargeManager.*;
 import static com.gilithrimm.affixes.affixes.HunterMarkManager.*;
-import static com.gilithrimm.affixes.builders.BuilderFactory.onChance;
-import static com.gilithrimm.affixes.builders.BuilderFactory.statusEffect;
+import static com.gilithrimm.affixes.affixes.interfaces.IAffixable.addAffix;
+import static com.gilithrimm.affixes.affixes.interfaces.IAffixable.getAffixesFromStack;
+import static com.gilithrimm.affixes.builders.BuilderFactory.*;
 import static com.gilithrimm.affixes.config.AffixConfig.*;
 import static com.gilithrimm.affixes.effects.AffixEffects.BLEED;
 import static com.gilithrimm.affixes.effects.AffixEffects.FRAGILE;
@@ -106,8 +111,7 @@ public class Affixes {
                float health = context.attacker().getHealth();
                increase = (context.attacker().getMaxHealth() - health) / 2;
                total += increase;
-               if (health <= 1)// health is a float
-               {
+               if (health <= 1) {// health is a float
                   total *= 4;
                }
                return total;
@@ -244,11 +248,12 @@ public class Affixes {
     * <li> summon lightning at target</li>
     * <li> deal 5 generic damage</li>
     * <li> take 5 generic damage</li>
+    * <li> heal 5 hp (2.5 hearts)</li>
     * </ul>
     */
    public static final Affix DEVIL_DIE = register(id("devil_die"),
          new AttackHookAdapter() {
-            final int singleEvents = 3;
+            final int singleEvents = 4;
             int randomEvent;
             StatusEffect[] statusEffects;
             int allEvents;
@@ -296,11 +301,11 @@ public class Affixes {
                      // this can trigger <=> (attacker's a living && attacker's main hand stack exists && attacker's main hand stack has >0 affixes bcuz THIS IS AN AFFIX)
                      // therefore the warning below is absolute bullshit
                      //(unless you delete the item mid affix exec but I don't think that's possible)
-                     mainHandStack.affixes$getAffixes()
-                                  .stream()
-                                  .filter(aff -> !aff.equals(id("devil_die")))
-                                  .forEach(mainHandStack::affixes$removeAffix);
-                     mainHandStack.affixes$addAffix(affix);
+                     getAffixesFromStack(context.affixedTool())
+                           .stream()
+                           .filter(aff -> !aff.equals(id("devil_die")))
+                           .forEach(mainHandStack::affixes$removeAffix);
+                     addAffix(context.affixedTool(), affix);
                   }
                }
                return total;
@@ -330,6 +335,7 @@ public class Affixes {
                                    .damage(context.world()
                                                   .getDamageSources()
                                                   .generic(), 5);
+                  case 3 -> context.attacker().heal(5);
                }
             }
          });
@@ -935,8 +941,7 @@ public class Affixes {
             @Override
             public List<Text> advancedTooltip() {
                final List<Text> tooltip = PostArmor.super.advancedTooltip();
-               tooltip.add(
-                     translatable("affix.affixes.techno_fort.tooltip", charge));
+               tooltip.add(translatable("affix.affixes.techno_fort.tooltip", charge));
                return tooltip;
             }
          });
@@ -965,14 +970,15 @@ public class Affixes {
                   int charge = getCharge(victim);
                   if (charge > 500) {
                      addCharge(victim, -400);
-                     victim.heal(amount * 35f / 100f);
+                     victim.heal(amount * .35f);
                   }
                }
             }
          });
    /**
-    * <b>Discharge:</b> {@code Charge / 100}% chance to multiply damage dealt by 10
-    * (only if Charge &gt; 1000); spends almost all Charge no matter the result<br>
+    * <b>Discharge:</b> {@code (Charge / 100)%} chance to multiply damage dealt by 10
+    * (only if Charge &gt; 1000); on fail deals {@code (Charge / 100)%} of max hp as dmg to attacker;
+    * spends almost all Charge no matter the result<br>
     * Also creates a small explosion because these affixes need some visuals they need to be more interesting
     * todo MORE SHIT ON THE SCREEN
     */
@@ -995,6 +1001,13 @@ public class Affixes {
                                         false,
                                         World.ExplosionSourceType.NONE);
                         })
+                        .unlucky(() -> context.attacker()
+                                              .damage(context.world()
+                                                             .getDamageSources()
+                                                             .lightningBolt(),
+                                                    charge / 100f
+                                                    * context.attacker()
+                                                             .getMaxHealth()))
                         .apply(charge / 100);
                   setCharge(context.attacker(), charge % 100);
                }
@@ -1045,8 +1058,7 @@ public class Affixes {
                   } else {
                      setCharge(target, 200);
                   }
-                  setCharge(ctx.attacker(),
-                        getCharge(ctx.attacker()) - 250);
+                  setCharge(ctx.attacker(), getCharge(ctx.attacker()) - 250);
                }
             }
          });

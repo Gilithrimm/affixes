@@ -17,8 +17,7 @@ import static net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder.creat
  * Simultaneously a way to hide away the specific mechanism (vanilla registries vs a humble set)
  */
 public class AffixRegistry {
-   private static final RegistryKey<Registry<Affix>> KEY = RegistryKey.ofRegistry(
-         id("affixes"));
+   private static final RegistryKey<Registry<Affix>> KEY = RegistryKey.ofRegistry(id("affixes"));
    private static final Registry<Affix> REGISTRY = createSimple(KEY)
          .attribute(RegistryAttribute.SYNCED)
          .attribute(RegistryAttribute.PERSISTED)
@@ -35,6 +34,7 @@ public class AffixRegistry {
     * @return affix matched by given id or {@link Affix#NO_AFFIX} if none found
     */
    public static Affix fromRegistry(Identifier id) {
+      //fixme i think we're destroying undefined affix ids (by turning them into no_affix)
       return id == null || !REGISTRY.containsId(id)
              ? Affix.NO_AFFIX
              : REGISTRY.get(id);

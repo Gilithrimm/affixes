@@ -93,8 +93,7 @@ public abstract class LivingEntityMixin extends EntityMixin
 
       affixes$damageHooks.addAll(affixedItems
             .stream()
-            .map(IAffixable.class::cast)
-            .map(IAffixable::affixes$getAffixes)
+            .map(IAffixable::getAffixesFromStack)
             .flatMap(Collection::stream)
             .map(Affix::hook)
             .filter(DamageHook.class::isInstance)

@@ -1,7 +1,6 @@
 package com.gilithrimm.affixes.mixin;
 
 import com.gilithrimm.affixes.affixes.Affix;
-import com.gilithrimm.affixes.affixes.interfaces.IAffixable;
 import com.gilithrimm.affixes.hooks.AttackHook;
 import com.gilithrimm.affixes.hooks.AttackHooks;
 import com.gilithrimm.affixes.hooks.Hook;
@@ -22,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import static com.gilithrimm.affixes.affixes.interfaces.IAffixable.getAffixesFromStack;
 import static com.gilithrimm.affixes.hooks.AttackHook.AttackHookContext;
 
 /**
@@ -43,13 +43,12 @@ public abstract class MobEntityMixin extends LivingEntity {
    private void setup(Entity target, CallbackInfoReturnable<Boolean> cir) {
       affixes$context = new AttackHookContext(this, target);
       affixes$attackHooks.clear();
-      affixes$attackHooks.addAll(((IAffixable) (Object) getStackInHand(getActiveHand()))
-            .affixes$getAffixes()
+      affixes$attackHooks.addAll((getAffixesFromStack(getStackInHand(getActiveHand()))
             .stream()
             .map(Affix::hook)
             .filter(AttackHook.class::isInstance)
             .map(AttackHook.class::cast)
-            .toList());
+            .toList()));
       affixes$attackHooks.forEach(Hook::setup);
    }
 

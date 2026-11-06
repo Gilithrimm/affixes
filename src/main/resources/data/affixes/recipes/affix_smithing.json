@@ -1,0 +1,12 @@
+{
+  "type": "affixes:affix_smithing",
+  "template": {
+    "item": "affixes:inscribed_affix"
+  },
+  "base": {
+    "tag": "affixes:affixable"
+  },
+  "addition": {
+    "item": "minecraft:echo_shard"
+  }
+}
