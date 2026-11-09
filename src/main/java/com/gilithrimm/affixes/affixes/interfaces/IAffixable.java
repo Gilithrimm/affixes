@@ -9,6 +9,13 @@ import java.util.Set;
  * Implemented in mixins - used to manipulate affixes on items
  */
 public interface IAffixable {
+   /**
+    * static wrapper for {@link IAffixable#affixes$getAffixes()} because double-cast is unwieldy
+    * (& so is the method name)
+    *
+    * @param stack {@link ItemStack} that can have affixes on itself
+    * @return a set of affixes on the item
+    */
    static Set<Affix> getAffixesFromStack(ItemStack stack) {
       return ((IAffixable) (Object) stack).affixes$getAffixes();//might change to null check n stuff
    }

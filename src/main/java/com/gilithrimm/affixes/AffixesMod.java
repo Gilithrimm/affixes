@@ -6,6 +6,7 @@ import com.gilithrimm.affixes.affixes.interfaces.IAffixEntityData;
 import com.gilithrimm.affixes.command.AffixCommand;
 import com.gilithrimm.affixes.config.AffixConfig;
 import com.gilithrimm.affixes.effects.AffixEffects;
+import com.gilithrimm.affixes.items.AffixItems;
 import eu.midnightdust.lib.config.MidnightConfig;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
@@ -45,7 +46,7 @@ public class AffixesMod implements ModInitializer {
 
    /**
     * fabric requires this to be public <br>
-    * otherwise 'exception when loading entrypoints for mod "affixes"' <br>
+    * otherwise <i>exception when loading entrypoints for mod "affixes"</i> <br>
     * so. there you have it. it's public now.
     */
    public AffixesMod() {}

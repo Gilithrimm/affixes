@@ -48,6 +48,8 @@ import java.util.function.Function;
 import static com.gilithrimm.affixes.AffixesMod.NBT_PREFIX;
 import static com.gilithrimm.affixes.effects.AffixEffects.BLEED;
 import static com.gilithrimm.affixes.effects.AffixEffects.FRAGILE;
+import static com.gilithrimm.affixes.effects.Bleed.BLEED_DAMAGE;
+import static com.gilithrimm.affixes.effects.Bleed.calculateDamage;
 
 /**
  * mixin for {@link LivingEntity}, allowing a bunch of shit to work - {@link IAffixEntityData data saved on entities for affixes}
@@ -75,7 +77,7 @@ public abstract class LivingEntityMixin extends EntityMixin
 
    @Inject(method = "damage", at = @At("HEAD"))
    private void setup(DamageSource source, float amount,
-                      CallbackInfoReturnable<Boolean> cir) {
+         CallbackInfoReturnable<Boolean> cir) {
       affixes$damageHooks.clear();
       affixes$context = new DamageHook.DamageHookContext(source,
             (LivingEntity) (Object) this);
@@ -131,7 +133,7 @@ public abstract class LivingEntityMixin extends EntityMixin
                     target = "Lnet/minecraft/entity/LivingEntity;damageShield(F)V",
                     shift = At.Shift.AFTER))
    private void shieldBlock(DamageSource source, float amount,
-                            CallbackInfoReturnable<Boolean> cir) {
+         CallbackInfoReturnable<Boolean> cir) {
       affixes$damageHooks.stream()
                          .map((Function<? super DamageHook, PostShieldBlock>) dh -> dh::postShieldBlock)
                          .reduce(PostShieldBlock::andThen)
@@ -143,7 +145,7 @@ public abstract class LivingEntityMixin extends EntityMixin
    @WrapOperation(method = "applyDamage", at = @At(value = "INVOKE",
                                                    target = "Lnet/minecraft/entity/LivingEntity;applyArmorToDamage(Lnet/minecraft/entity/damage/DamageSource;F)F"))
    private float armor(LivingEntity instance, DamageSource source, float amount,
-                       Operation<Float> original) {
+         Operation<Float> original) {
       amount = affixes$damageHooks.stream()
                                   .map((Function<DamageHook, PostArmor>) dh -> dh::postArmor)
                                   .reduce(PostArmor::andThen)
@@ -157,7 +159,7 @@ public abstract class LivingEntityMixin extends EntityMixin
    @WrapOperation(method = "modifyAppliedDamage", at = @At(value = "INVOKE",
                                                            target = "Lnet/minecraft/entity/DamageUtil;getInflictedDamage(FF)F"))
    private float protection(float damageDealt, float protection,
-                            Operation<Float> original) {
+         Operation<Float> original) {
       damageDealt = affixes$damageHooks.stream()
                                        .map((Function<DamageHook, PostProtection>) dh -> dh::postProtection)
                                        .reduce(PostProtection::andThen)
@@ -172,7 +174,7 @@ public abstract class LivingEntityMixin extends EntityMixin
    @Inject(method = "modifyAppliedDamage",
            at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F"))
    private void resistance(DamageSource source, float amount,
-                           CallbackInfoReturnable<Float> cir) {
+         CallbackInfoReturnable<Float> cir) {
       amount = affixes$damageHooks.stream()
                                   .map((Function<DamageHook, PostResistance>) dh -> dh::postResistance)
                                   .reduce(PostResistance::andThen)
@@ -206,7 +208,7 @@ public abstract class LivingEntityMixin extends EntityMixin
    @Inject(method = "damage", at = @At(value = "INVOKE",
                                        target = "Lnet/minecraft/entity/LivingEntity;takeKnockback(DDD)V"))
    private void knockback(DamageSource source, float amount,
-                          CallbackInfoReturnable<Boolean> cir) {
+         CallbackInfoReturnable<Boolean> cir) {
       affixes$damageHooks.stream()
                          .map((Function<DamageHook, PostKnockback>) dh -> dh::postKnockback)
                          .reduce(PostKnockback::andThen)
@@ -218,7 +220,7 @@ public abstract class LivingEntityMixin extends EntityMixin
    @Inject(method = "damage", at = @At(value = "INVOKE",
                                        target = "Lnet/minecraft/entity/LivingEntity;onDeath(Lnet/minecraft/entity/damage/DamageSource;)V"))
    private void death(DamageSource source, float amount,
-                      CallbackInfoReturnable<Boolean> cir) {
+         CallbackInfoReturnable<Boolean> cir) {
       affixes$damageHooks.stream()
                          .map((Function<DamageHook, PostDeath>) dh -> dh::postDeath)
                          .reduce(PostDeath::andThen)
@@ -295,12 +297,15 @@ public abstract class LivingEntityMixin extends EntityMixin
    public abstract @Nullable StatusEffectInstance getStatusEffect(
          StatusEffect effect);
 
+   @Shadow
+   protected abstract void applyDamage(DamageSource source, float amount);
+
    @ModifyReturnValue(method = "modifyAppliedDamage", at = @At("RETURN"))
    private float fragile(float original,
-                         @Local(argsOnly = true) DamageSource src) {
+         @Local(argsOnly = true) DamageSource src) {
       if (original != 0 &&
-            (!hasStatusEffect(StatusEffects.RESISTANCE) ||
-                  src.isIn(DamageTypeTags.BYPASSES_RESISTANCE))) {
+          (!hasStatusEffect(StatusEffects.RESISTANCE) ||
+           src.isIn(DamageTypeTags.BYPASSES_RESISTANCE))) {
          if (hasStatusEffect(FRAGILE)) {
             int impact = 5 + getStatusEffect(FRAGILE).getAmplifier() + 1;
             original *= impact / 5f;
@@ -313,10 +318,13 @@ public abstract class LivingEntityMixin extends EntityMixin
 
    @ModifyReturnValue(method = "modifyAppliedDamage", at = @At("RETURN"))
    private float bleed(float damage, @Local(argsOnly = true) DamageSource src) {
-      if (damage != 0 && hasStatusEffect(BLEED)) {
-         float impact = Bleed.calculateDamage(
-               getStatusEffect(BLEED).getAmplifier() + 1);
-         damage += damage * impact;
+      if (damage != 0 && hasStatusEffect(BLEED) && !src.isOf(BLEED_DAMAGE)) {
+         var bleed = new DamageSource(getWorld().getRegistryManager()
+                                                .get(RegistryKeys.DAMAGE_TYPE)
+                                                .entryOf(BLEED_DAMAGE));
+         //bleed as flat dmg or scaling off of hp/max hp/dmg dealt???
+         applyDamage(bleed, calculateDamage(getStatusEffect(BLEED).getAmplifier()
+                                            + 1));
       }
       return damage;
    }
@@ -325,7 +333,7 @@ public abstract class LivingEntityMixin extends EntityMixin
 
    @Override
    protected void lightning(ServerWorld world, LightningEntity lightning,
-                            CallbackInfo ci) {
+         CallbackInfo ci) {
       super.lightning(world, lightning, ci);
       String key = "charge";
       int charge = 1000;

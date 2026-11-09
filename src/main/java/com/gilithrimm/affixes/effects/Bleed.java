@@ -1,12 +1,19 @@
 package com.gilithrimm.affixes.effects;
 
+import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+
+import static com.gilithrimm.affixes.AffixesMod.id;
 
 /**
- * increases dmg taken depending on a lvl in a non-linear fashion (lvl<sup>2</sup>/50)
+ * deals extra dmg based on its lvl every time the character afflicted takes dmg
  */
 public class Bleed extends StatusEffect {
+   public static final RegistryKey<DamageType> BLEED_DAMAGE = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, id("bleed_damage"));
+
    /**
     * Java requires 'constructor matching super' so it got 'constructor matching super'
     *
@@ -18,14 +25,17 @@ public class Bleed extends StatusEffect {
    }
 
    /**
-    * Calculates the multiplier by which this status effect increases damage taken
+    * Calculates the damage dealt by Bleed based on the lvl
     *
     * @param lvl level of bleed, or amplifier + 1
-    * @return bleed multiplier
+    * @return bleed damage
     */
    public static float calculateDamage(int lvl) {
-      return lvl * lvl / 50f;
+      //...genuinely how do i make this worthwhile & not extra op
+      return lvl / 3f;
+      //...I keep forgetting that I should balance this game around lvl<=5
    }
+
 }
 
 //todo rework?? it feels extremely insignificant rn

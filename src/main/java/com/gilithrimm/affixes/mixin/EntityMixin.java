@@ -3,7 +3,9 @@ package com.gilithrimm.affixes.mixin;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LightningEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,6 +21,9 @@ public abstract class EntityMixin {
     */
    protected EntityMixin() {}
 
+   @Shadow
+   public abstract World getWorld();
+
    /**
     * used to implement in children
     *
@@ -28,5 +33,5 @@ public abstract class EntityMixin {
     */
    @Inject(method = "onStruckByLightning", at = @At("TAIL"))
    protected void lightning(ServerWorld world, LightningEntity lightning,
-                            CallbackInfo ci) {}
+         CallbackInfo ci) {}
 }

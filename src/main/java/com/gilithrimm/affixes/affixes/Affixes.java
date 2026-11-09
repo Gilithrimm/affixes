@@ -104,13 +104,13 @@ public class Affixes {
    public static final Affix LEARNING_FROM_PAIN = register(
          id("learning_from_pain"),
          new PostAttribute() {
-            private float increase;
+            private float hpBuff;
 
             @Override
             public float postAttribute(float total, AttackHookContext context) {
                float health = context.attacker().getHealth();
-               increase = (context.attacker().getMaxHealth() - health) / 2;
-               total += increase;
+               hpBuff = (context.attacker().getMaxHealth() - health) / 2;
+               total += hpBuff;
                if (health <= 1) {// health is a float
                   total *= 4;
                }
@@ -121,8 +121,7 @@ public class Affixes {
             @Override
             public List<Text> advancedTooltip() {
                List<Text> tooltip = PostAttribute.super.advancedTooltip();
-               tooltip.add(
-                     translatable("affix.affixes.learning_from_pain.tooltip", increase));
+               tooltip.add(translatable("affix.affixes.learning_from_pain.tooltip", hpBuff));
                return tooltip;
             }
          });
@@ -151,9 +150,8 @@ public class Affixes {
             @Override
             public List<Text> advancedTooltip() {
                List<Text> tooltips = PostEnchantments.super.advancedTooltip();
-               tooltips.add(
-                     translatable("affix.affixes.friday_the_13th.tooltip",
-                           13 - counter));
+               tooltips.add(translatable("affix.affixes.friday_the_13th.tooltip",
+                     13 - counter));
                return tooltips;
             }
          });
@@ -630,14 +628,13 @@ public class Affixes {
             @Override
             public List<Text> advancedTooltip() {
                List<Text> texts = super.advancedTooltip();
-               texts.add(
-                     translatable("affix.affixes.defensive_stance.tooltip",
-                           chance / 5));
+               texts.add(translatable("affix.affixes.defensive_stance.tooltip",
+                     chance / 5));
                return texts;
             }
          });
    /**
-    * <b>Hard Skin:</b> for every 2hp dealt there's 25% chance to lower damage dealt by 1.5hp
+    * <b>Hard Skin:</b> for every 2hp dealt there's 1 in 4 chance to lower damage dealt by 1.5hp
     */
    public static final Affix HARD_SKIN = register(id("hard_skin"),
          (PostArmor) (context, amount) -> {
@@ -656,7 +653,7 @@ public class Affixes {
             return ref.damage;
          });
    /**
-    * <b>Pricky Armor:</b> applies Poison III for 5s and Bleed II for 30s to the attacker after being hit at 40% chance
+    * <b>Pricky Armor:</b> applies Poison III for 5s and Fragile II for 20s to the attacker after being hit at 40% chance
     */
    public static final Affix PRICKY_ARMOR = register(id("pricky_armor"),
          (DamageHooks.PostDamage) (c, amount) -> {
@@ -669,8 +666,8 @@ public class Affixes {
                               .duration(20 * 5)
                               .amplifier(2)
                               .apply(attacker);
-                        statusEffect(BLEED)
-                              .duration(20 * 30)
+                        statusEffect(FRAGILE)
+                              .duration(20 * 20)
                               .amplifier(1)
                               .apply(attacker);
                      })
@@ -817,7 +814,7 @@ public class Affixes {
          });
    /**
     * <b>Barbed Shield:</b> reflects 15% damage blocked with shield; 20% chance to reflect 55% damage instead<br>
-    * secret: .1% chance to inflict Bleed V for 5s
+    * secret: .1% chance to inflict Bleed V for 5s & Fragile II for 10s
     */
    public static final Affix BARBED_SHIELD = register(id("barbed_shield"),
          (DamageHooks.PostShieldBlock) (context, amount) -> {
@@ -838,10 +835,16 @@ public class Affixes {
                // secret
                onChance(1000)
                      .debug()
-                     .lucky(() -> hiddenStatusEffect(BLEED)
-                           .duration(20 * 5)
-                           .amplifier(4)
-                           .apply(attacker))
+                     .lucky(() -> {
+                        hiddenStatusEffect(BLEED)
+                              .duration(20 * 5)
+                              .amplifier(4)
+                              .apply(attacker);
+                        hiddenStatusEffect(FRAGILE)
+                              .duration(20 * 10)
+                              .amplifier(1)
+                              .apply(attacker);
+                     })
                      .apply(1);
 
             }
@@ -1098,15 +1101,15 @@ public class Affixes {
             }
          });
    /**
-    * <b>Blood Rage:</b> multiplies damage dealt by the {.1 * lvl of Bleeding on the attacker}
+    * <b>Blood Rage:</b> increases dmg dealt by {10 * lvl of Bleed on the attacker}%
     */
    public static final Affix BLOOD_RAGE = register(id("blood_rage"),
-         (PostAttackCooldown) (total, ctx) -> total * (ctx.attacker()
-                                                          .hasStatusEffect(BLEED)
-                                                       ? (ctx.attacker()
-                                                             .getStatusEffect(BLEED)
-                                                             .getAmplifier() + 11) / 10f
-                                                       : 1f));
+         (PostAttackCooldown) (total, ctx) ->
+               total * (1 + (ctx.attacker().hasStatusEffect(BLEED)
+                             ? (ctx.attacker()
+                                   .getStatusEffect(BLEED)
+                                   .getAmplifier()) / 10f
+                             : 0f)));
 
    /**
     * <b>No Weaknesses!:</b> gives the attacker Speed II for 2 min and Regen I for 30s if they have Weakness

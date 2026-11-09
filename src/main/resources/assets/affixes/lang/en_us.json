@@ -103,6 +103,8 @@
    "commands.affix.add.multiple": "Added affix %s to %s entities",
 
    "effect.affixes.bleed": "Bleed",
+   "death.attack.bleed": "%s bled to death",
+   "death.attack.bleed.player": "%s bled to death whilst fighting %s",
    "effect.affixes.fragile": "Fragile",
 
    "modmenu.nameTranslation.affixes": "Affixes",
