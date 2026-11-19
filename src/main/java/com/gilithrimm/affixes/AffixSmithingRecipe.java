@@ -23,30 +23,49 @@ import static com.gilithrimm.affixes.affixes.interfaces.IAffixContainer.getStore
 import static com.gilithrimm.affixes.affixes.interfaces.IAffixable.getAffixesFromStack;
 import static net.minecraft.registry.Registry.register;
 
+/**
+ * Recipe type for affixing items via smithing table, with minimal support for json
+ */
 //hardcode 4 now
 public class AffixSmithingRecipe implements SmithingRecipe {
    //tutorial expects codecs; tutorial is for newer ver
 
+   /**
+    * Serializer for this recipe type.
+    * <br>
+    * it do be doin' somthin', i bet
+    */
    public static final RecipeSerializer<AffixSmithingRecipe> SERIALIZER = register(Registries.RECIPE_SERIALIZER, id("affix_smithing"), new Serializer());
-   final Ingredient template;//affix actually
-   final Ingredient base;//item
-   final Ingredient addition;//material
+   private final Ingredient source;//affix actually
+   private final Ingredient base;//item
+   private final Ingredient cost;//material
    private final Identifier id;
 
 
-   public AffixSmithingRecipe(Identifier id, Ingredient template,
-                              Ingredient base, Ingredient addition) {
+   /**
+    * constructor for this recipe type thing
+    *
+    * @param id     id of the recipe
+    * @param source {@link Ingredient ingredient} used as a source of the affix
+    * @param base   {@link Ingredient ingredient} used as a base, usually your eq
+    * @param cost   {@link Ingredient ingredient} used as a cost of affixing the item
+    */
+   public AffixSmithingRecipe(Identifier id, Ingredient source,
+         Ingredient base, Ingredient cost) {
       this.id = id;
-      this.template = template;
+      this.source = source;
       this.base = base;
-      this.addition = addition;
+      this.cost = cost;
    }
 
+   /**
+    * calling this function forces all the static fields to init which is the only reason it exists at all
+    */
    public static void forceLoad() {}
 
    @Override
    public boolean testTemplate(ItemStack stack) {
-      return this.template.test(stack);
+      return this.source.test(stack);
    }
 
    @Override
@@ -56,19 +75,19 @@ public class AffixSmithingRecipe implements SmithingRecipe {
 
    @Override
    public boolean testAddition(ItemStack stack) {
-      return this.addition.test(stack);
+      return this.cost.test(stack);
    }
 
    @Override
    public boolean matches(Inventory inventory, World world) {
-      return this.template.test(inventory.getStack(0))
+      return this.source.test(inventory.getStack(0))
              && this.base.test(inventory.getStack(1))
-             && this.addition.test(inventory.getStack(2));
+             && this.cost.test(inventory.getStack(2));
    }
 
    @Override
    public ItemStack craft(Inventory inventory,
-                          DynamicRegistryManager registryManager) {
+         DynamicRegistryManager registryManager) {
       //actual result
       ItemStack templateStack = inventory.getStack(0);
       ItemStack baseStack = inventory.getStack(1);
@@ -112,15 +131,15 @@ public class AffixSmithingRecipe implements SmithingRecipe {
 
    static class Serializer implements RecipeSerializer<AffixSmithingRecipe> {
       public AffixSmithingRecipe read(Identifier identifier,
-                                      JsonObject jsonObject) {
-         Ingredient ingredient = Ingredient.fromJson(JsonHelper.getElement(jsonObject, "template"));
+            JsonObject jsonObject) {
+         Ingredient ingredient = Ingredient.fromJson(JsonHelper.getElement(jsonObject, "source"));
          Ingredient ingredient2 = Ingredient.fromJson(JsonHelper.getElement(jsonObject, "base"));
-         Ingredient ingredient3 = Ingredient.fromJson(JsonHelper.getElement(jsonObject, "addition"));
+         Ingredient ingredient3 = Ingredient.fromJson(JsonHelper.getElement(jsonObject, "cost"));
          return new AffixSmithingRecipe(identifier, ingredient, ingredient2, ingredient3);
       }
 
       public AffixSmithingRecipe read(Identifier identifier,
-                                      PacketByteBuf packetByteBuf) {
+            PacketByteBuf packetByteBuf) {
          Ingredient ingredient = Ingredient.fromPacket(packetByteBuf);
          Ingredient ingredient2 = Ingredient.fromPacket(packetByteBuf);
          Ingredient ingredient3 = Ingredient.fromPacket(packetByteBuf);
@@ -128,10 +147,10 @@ public class AffixSmithingRecipe implements SmithingRecipe {
       }
 
       public void write(PacketByteBuf packetByteBuf,
-                        AffixSmithingRecipe recipe) {
-         recipe.template.write(packetByteBuf);
+            AffixSmithingRecipe recipe) {
+         recipe.source.write(packetByteBuf);
          recipe.base.write(packetByteBuf);
-         recipe.addition.write(packetByteBuf);
+         recipe.cost.write(packetByteBuf);
       }
    }
 }

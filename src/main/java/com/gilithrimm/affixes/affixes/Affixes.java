@@ -814,7 +814,7 @@ public class Affixes {
          });
    /**
     * <b>Barbed Shield:</b> reflects 15% damage blocked with shield; 20% chance to reflect 55% damage instead<br>
-    * secret: .1% chance to inflict Bleed V for 5s & Fragile II for 10s
+    * secret: .1% chance to inflict Bleed V for 5s &amp; Fragile II for 10s
     */
    public static final Affix BARBED_SHIELD = register(id("barbed_shield"),
          (DamageHooks.PostShieldBlock) (context, amount) -> {

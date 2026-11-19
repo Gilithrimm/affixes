@@ -21,6 +21,11 @@ public abstract class EntityMixin {
     */
    protected EntityMixin() {}
 
+   /**
+    * shadowed from {@link Entity}. ignore.
+    *
+    * @return world
+    */
    @Shadow
    public abstract World getWorld();
 

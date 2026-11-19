@@ -12,6 +12,9 @@ import static com.gilithrimm.affixes.AffixesMod.id;
  * deals extra dmg based on its lvl every time the character afflicted takes dmg
  */
 public class Bleed extends StatusEffect {
+   /**
+    * bleed damage type registry key
+    */
    public static final RegistryKey<DamageType> BLEED_DAMAGE = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, id("bleed_damage"));
 
    /**
@@ -37,6 +40,3 @@ public class Bleed extends StatusEffect {
    }
 
 }
-
-//todo rework?? it feels extremely insignificant rn
-// unless you're running Puncturing Wounds in which case it turns from insignificant to unbalanced

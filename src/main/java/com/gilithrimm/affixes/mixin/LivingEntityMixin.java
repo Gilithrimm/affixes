@@ -297,6 +297,12 @@ public abstract class LivingEntityMixin extends EntityMixin
    public abstract @Nullable StatusEffectInstance getStatusEffect(
          StatusEffect effect);
 
+   /**
+    * shadowed from {@link LivingEntity}. ignore.
+    *
+    * @param source damage source
+    * @param amount amount
+    */
    @Shadow
    protected abstract void applyDamage(DamageSource source, float amount);
 

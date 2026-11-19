@@ -11,7 +11,7 @@ import java.util.Set;
 public interface IAffixable {
    /**
     * static wrapper for {@link IAffixable#affixes$getAffixes()} because double-cast is unwieldy
-    * (& so is the method name)
+    * (&amp; so is the method name)
     *
     * @param stack {@link ItemStack} that can have affixes on itself
     * @return a set of affixes on the item
@@ -20,6 +20,14 @@ public interface IAffixable {
       return ((IAffixable) (Object) stack).affixes$getAffixes();//might change to null check n stuff
    }
 
+   /**
+    * static wrapper for {@link #affixes$addAffix(Affix)} because double-cast is unwieldy
+    * (&amp; so is the method name)
+    *
+    * @param stack the {@link ItemStack} we add the affix to
+    * @param affix affix to add
+    * @return if the affix was actually added
+    */
    static boolean addAffix(ItemStack stack, Affix affix) {
       return ((IAffixable) (Object) stack).affixes$addAffix(affix);
    }
@@ -36,7 +44,7 @@ public interface IAffixable {
    /**
     * gives you affixes currently on this item
     *
-    * @return set of affixes on this item
+    * @return set of affixes on this item (empty set if none)
     */
    Set<Affix> affixes$getAffixes();
 
